@@ -20,113 +20,20 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Custom styling */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-around;
-            padding: 0.5rem 0;
-            z-index: 50;
-            overflow-x: auto;
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #4a5568;
-            font-size: 0.7rem;
-            cursor: pointer;
-            min-width: 60px;
-        }
-        .nav-item.active {
-            color: #001f3f;
-            font-weight: 600;
-        }
-        .nav-item i {
-            font-size: 1.25rem;
-            margin-bottom: 0.125rem;
-        }
-        .content {
-            padding-bottom: 5rem;
-        }
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-        .modal-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .lock-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-        }
-        .btn-navy {
-            background-color: #001f3f;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: 0.2s;
-        }
-        .btn-navy:hover {
-            background-color: #003366;
-        }
-        .btn-outline-navy {
-            border: 1px solid #001f3f;
-            color: #001f3f;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-        }
-        .btn-outline-navy:hover {
-            background-color: #e6f0ff;
-        }
-        .dark {
-            background-color: #1a202c;
-            color: #f7fafc;
-        }
-        .dark .bg-white {
-            background-color: #2d3748;
-        }
-        .tab {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-        }
-        .tab.active {
-            border-bottom-color: #001f3f;
-            font-weight: 600;
-        }
-        .hidden {
-            display: none;
-        }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; padding: 0.5rem 0; z-index: 50; overflow-x: auto; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #4a5568; font-size: 0.7rem; cursor: pointer; min-width: 60px; }
+        .nav-item.active { color: #001f3f; font-weight: 600; }
+        .content { padding-bottom: 5rem; }
+        .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .modal-card { background: white; border-radius: 1rem; padding: 1.5rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .lock-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
+        .btn-navy { background-color: #001f3f; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: 0.2s; }
+        .btn-navy:hover { background-color: #003366; }
+        .btn-outline-navy { border: 1px solid #001f3f; color: #001f3f; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .btn-outline-navy:hover { background-color: #e6f0ff; }
+        .tab { display: inline-block; padding: 0.5rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { border-bottom-color: #001f3f; font-weight: 600; }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
@@ -144,7 +51,7 @@
 
 <!-- Konten Utama (setelah login & lisensi aktif) -->
 <div id="appContent" class="hidden">
-    <!-- Bottom Navigation (8 item) -->
+    <!-- Bottom Navigation -->
     <div class="bottom-nav" id="bottomNav">
         <div class="nav-item active" data-page="dashboard"><i class="fas fa-home"></i><span>Beranda</span></div>
         <div class="nav-item" data-page="outlets"><i class="fas fa-store"></i><span>Outlet</span></div>
@@ -170,14 +77,14 @@
             <button id="tabLogin" class="flex-1 py-2 text-center font-medium border-b-2 border-navy-800">Masuk</button>
             <button id="tabRegister" class="flex-1 py-2 text-center font-medium text-gray-500">Daftar</button>
         </div>
+        <!-- Form Login -->
         <div id="loginForm" class="space-y-4">
             <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 border rounded-lg">
             <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border rounded-lg">
             <button id="loginBtn" class="w-full btn-navy py-3">Masuk</button>
-            <p class="text-sm text-center text-gray-500">
-                Lupa password? <a href="#" onclick="resetPassword()" class="text-navy-800">Reset</a>
-            </p>
+            <p class="text-sm text-center text-gray-500">Lupa password? <a href="#" onclick="resetPassword()" class="text-navy-800">Reset</a></p>
         </div>
+        <!-- Form Registrasi -->
         <div id="registerForm" class="space-y-4 hidden">
             <input type="text" id="regName" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg">
             <input type="email" id="regEmail" placeholder="Email" class="w-full p-3 border rounded-lg">
@@ -210,7 +117,6 @@
     let licenseData = null;
     let currentPage = 'dashboard';
 
-    // Elemen DOM
     const authContainer = document.getElementById('authContainer');
     const appContent = document.getElementById('appContent');
     const lockOverlay = document.getElementById('lockOverlay');
@@ -242,9 +148,8 @@
     // ==================== CEK LISENSI ====================
     async function checkLicense() {
         if (!currentUser) return false;
-        const ownerId = currentUser.uid;
         try {
-            const doc = await db.collection('Master_Owners').doc(ownerId).get();
+            const doc = await db.collection('Master_Owners').doc(currentUser.uid).get();
             if (!doc.exists) {
                 lockMessage.innerText = 'Data owner tidak ditemukan. Hubungi developer.';
                 return false;
@@ -260,7 +165,6 @@
                 lockMessage.innerText = 'Masa aktif lisensi telah habis.';
                 return false;
             }
-            // Simpan di localStorage untuk offline check (opsional)
             localStorage.setItem('hei_license', JSON.stringify({ expiry: expiry.getTime(), status: data.status }));
             return true;
         } catch (e) {
@@ -338,7 +242,6 @@
         const today = new Date(); today.setHours(0,0,0,0);
         const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
 
-        // Pemasukan & void
         const transQuery = db.collection('Owners').doc(currentOwnerId).collection('Transactions')
             .where('timestamp', '>=', today).where('timestamp', '<', tomorrow);
         const unsubTrans = transQuery.onSnapshot(snapshot => {
@@ -351,7 +254,6 @@
             updateDashboardNumbers();
         });
 
-        // Pengeluaran (non-stok)
         const expQuery = db.collection('Owners').doc(currentOwnerId).collection('Expenses')
             .where('timestamp', '>=', today).where('timestamp', '<', tomorrow)
             .where('isStockPurchase', '==', false);
@@ -366,7 +268,7 @@
         loadStockLimit();
 
         function updateDashboardNumbers() {
-            profitToday = incomeToday - expenseToday; // sederhana, belum dikurangi HPP
+            profitToday = incomeToday - expenseToday;
             document.getElementById('incomeToday').innerText = formatRupiah(incomeToday);
             document.getElementById('expenseToday').innerText = formatRupiah(expenseToday);
             document.getElementById('profitToday').innerText = formatRupiah(profitToday);
@@ -534,7 +436,6 @@
     }
 
     function showAddEmployeeModal() {
-        // Load outlets for dropdown
         db.collection('Owners').doc(currentOwnerId).collection('Outlets').get().then(snap => {
             let options = '';
             snap.forEach(doc => options += `<option value="${doc.id}">${doc.data().name}</option>`);
@@ -571,7 +472,7 @@
         const pinConfirm = document.getElementById('empPinConfirm').value;
         if (!name || !pin || pin.length < 4 || pin !== pinConfirm) return alert('Data tidak valid');
         await db.collection('Owners').doc(currentOwnerId).collection('Employees').add({
-            name, phone, outletId, role, shift, salary, pin, // plain pin (tidak aman, untuk contoh)
+            name, phone, outletId, role, shift, salary, pin, // plain pin (contoh)
             isActive: true,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -592,7 +493,7 @@
         }
     }
 
-    // ==================== MENU (dengan kategori, satuan, varian) ====================
+    // ==================== MENU ====================
     function renderMenu() {
         pageContent.innerHTML = `
             <div class="flex justify-between items-center mb-4">
@@ -610,7 +511,6 @@
             </div>
             <div id="menuTabContent"></div>
         `;
-        // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -648,7 +548,6 @@
     }
 
     async function loadCategories() {
-        // For simplicity, we'll store categories in a separate subcollection 'Categories'
         const snap = await db.collection('Owners').doc(currentOwnerId).collection('Categories').get();
         let html = '<div class="mb-4"><button onclick="showAddCategoryModal()" class="btn-navy">Tambah Kategori</button></div>';
         html += '<ul>';
@@ -754,7 +653,6 @@
     }
 
     function showAddMenuModal() {
-        // Load categories, units, variants for dropdowns
         Promise.all([
             db.collection('Owners').doc(currentOwnerId).collection('Categories').get(),
             db.collection('Owners').doc(currentOwnerId).collection('Units').get(),
@@ -824,7 +722,6 @@
     }
 
     async function saveMenu() {
-        // Collect data
         const name = document.getElementById('menuName').value;
         const category = document.getElementById('menuCategory').value;
         const unit = document.getElementById('menuUnit').value;
@@ -841,7 +738,6 @@
         };
         const taxPpn = parseFloat(document.getElementById('taxPpn').value) || 0;
 
-        // Recipe
         const recipe = [];
         const ingredientRows = document.querySelectorAll('#recipeContainer .flex');
         ingredientRows.forEach(row => {
@@ -852,7 +748,6 @@
             }
         });
 
-        // Calculate HPP
         let hpp = 0;
         for (let item of recipe) {
             const ingDoc = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc(item.ingId).get();
@@ -862,7 +757,6 @@
         }
         document.getElementById('calculatedHpp').value = hpp;
 
-        // Save menu
         await db.collection('Owners').doc(currentOwnerId).collection('Menu').add({
             name, category, unit, variant, prices, discounts, taxPpn, recipe,
             calculatedHpp: hpp,
@@ -885,7 +779,6 @@
     }
 
     async function syncHpp() {
-        // Update HPP for all menus based on latest ingredient prices
         const menusSnap = await db.collection('Owners').doc(currentOwnerId).collection('Menu').get();
         const batch = db.batch();
         for (const doc of menusSnap.docs) {
@@ -905,7 +798,7 @@
         alert('HPP semua menu telah disinkronisasi');
     }
 
-    // ==================== STOK (Bahan Baku) ====================
+    // ==================== STOK ====================
     function renderStock() {
         pageContent.innerHTML = `
             <div class="flex justify-between items-center mb-4">
@@ -940,7 +833,6 @@
     }
 
     function showAddIngredientModal() {
-        // Load units for dropdown
         db.collection('Owners').doc(currentOwnerId).collection('Units').get().then(snap => {
             let unitOptions = '<option value="">Pilih Satuan</option>';
             snap.forEach(doc => unitOptions += `<option value="${doc.data().name}">${doc.data().name}</option>`);
@@ -970,7 +862,6 @@
             avgBuyPrice: price, lastPurchasePrice: price,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        // If stock > 0, create expense
         if (stock > 0) {
             const expRef = db.collection('Owners').doc(currentOwnerId).collection('Expenses').doc();
             batch.set(expRef, {
@@ -1039,14 +930,14 @@
         alert('Stok berhasil ditambahkan');
         closeModal();
         loadIngredients();
-        loadStockLimit(); // refresh dashboard if needed
+        loadStockLimit();
     }
 
     function editIngredient(id) {
         alert('Edit bahan');
     }
 
-    // ==================== PENGELUARAN & TEMPLATE ====================
+    // ==================== PENGELUARAN ====================
     function renderExpenses() {
         pageContent.innerHTML = `
             <div class="flex justify-between items-center mb-4">
@@ -1081,15 +972,12 @@
     }
 
     function showAddExpenseModal() {
-        // Load templates
         db.collection('Owners').doc(currentOwnerId).collection('Templates').get().then(snap => {
             let templateOptions = '<option value="">Manual</option>';
             snap.forEach(doc => templateOptions += `<option value="${doc.id}" data-cat="${doc.data().category}" data-amount="${doc.data().defaultAmount || 0}">${doc.data().name}</option>`);
             showModal(`
                 <h2 class="text-xl font-bold mb-4">Tambah Pengeluaran</h2>
-                <select id="expTemplate" class="w-full p-2 border rounded mb-3">
-                    ${templateOptions}
-                </select>
+                <select id="expTemplate" class="w-full p-2 border rounded mb-3">${templateOptions}</select>
                 <input type="text" id="expCategory" placeholder="Kategori" class="w-full p-2 border rounded mb-3">
                 <input type="text" id="expItem" placeholder="Keterangan" class="w-full p-2 border rounded mb-3">
                 <input type="number" id="expAmount" placeholder="Nominal" class="w-full p-2 border rounded mb-3">
@@ -1099,7 +987,6 @@
                 </div>
                 <button onclick="saveExpense()" class="btn-navy w-full">Simpan</button>
             `);
-            // Handle template selection
             document.getElementById('expTemplate').addEventListener('change', function() {
                 const selected = this.options[this.selectedIndex];
                 if (selected.value) {
@@ -1111,7 +998,6 @@
     }
 
     async function saveExpense() {
-        const template = document.getElementById('expTemplate').value;
         const category = document.getElementById('expCategory').value;
         const itemName = document.getElementById('expItem').value;
         const amount = parseFloat(document.getElementById('expAmount').value);
@@ -1249,17 +1135,14 @@
             end = new Date(document.getElementById('endDate').value);
             end.setHours(23,59,59);
         }
-        // Ambil data transaksi
         const transSnap = await db.collection('Owners').doc(currentOwnerId).collection('Transactions')
             .where('timestamp', '>=', start).where('timestamp', '<=', end).get();
         const expensesSnap = await db.collection('Owners').doc(currentOwnerId).collection('Expenses')
             .where('timestamp', '>=', start).where('timestamp', '<=', end).get();
         const ingredientsSnap = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').get();
 
-        // Buat workbook
         const wb = XLSX.utils.book_new();
 
-        // Sheet Ringkasan Laba Rugi
         let totalPenjualan = 0, totalHPP = 0, totalExpense = 0;
         transSnap.forEach(doc => {
             const data = doc.data();
@@ -1285,7 +1168,6 @@
         ]);
         XLSX.utils.book_append_sheet(wb, sheetRingkasan, 'Ringkasan');
 
-        // Sheet Detail Transaksi
         const transData = [['No Invoice', 'Tanggal', 'Jam', 'Kasir', 'Item', 'Qty', 'Harga', 'Total', 'HPP', 'Profit']];
         transSnap.forEach(doc => {
             const t = doc.data();
@@ -1301,7 +1183,6 @@
         const sheetTrans = XLSX.utils.aoa_to_sheet(transData);
         XLSX.utils.book_append_sheet(wb, sheetTrans, 'Transaksi');
 
-        // Sheet Pengeluaran
         const expData = [['Tanggal', 'Kategori', 'Keterangan', 'Nominal', 'Tipe']];
         expensesSnap.forEach(doc => {
             const e = doc.data();
@@ -1311,7 +1192,6 @@
         const sheetExp = XLSX.utils.aoa_to_sheet(expData);
         XLSX.utils.book_append_sheet(wb, sheetExp, 'Pengeluaran');
 
-        // Sheet Stok
         const stokData = [['Nama Bahan', 'Satuan', 'Stok Akhir', 'Min Stok']];
         ingredientsSnap.forEach(doc => {
             const i = doc.data();
@@ -1320,7 +1200,6 @@
         const sheetStok = XLSX.utils.aoa_to_sheet(stokData);
         XLSX.utils.book_append_sheet(wb, sheetStok, 'Stok');
 
-        // Sheet Menu Terjual
         const menuCount = {};
         transSnap.forEach(doc => {
             const t = doc.data();
@@ -1341,14 +1220,12 @@
         const sheetMenu = XLSX.utils.aoa_to_sheet(menuData);
         XLSX.utils.book_append_sheet(wb, sheetMenu, 'Menu Terjual');
 
-        // Export
         XLSX.writeFile(wb, `laporan_${start.toISOString().slice(0,10)}.xlsx`);
     }
 
     async function exportJPEG() {
         const summaryDiv = document.getElementById('reportSummary');
         summaryDiv.innerHTML = '<p>Mengambil data...</p>';
-        // Sederhana: ambil ringkasan dari dashboard
         const income = incomeToday, expense = expenseToday, profit = profitToday, voidCount = voidToday;
         summaryDiv.innerHTML = `
             <h2 class="font-bold text-lg">Ringkasan Keuangan</h2>
