@@ -2,1092 +2,1516 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HeiKasir - Master Developer</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <!-- Chart.js untuk grafik -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HeiKasir - Owner</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- CryptoJS (untuk hash PIN, tidak dipakai di master) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #f5f5f5;
-        }
-
-        /* Login */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #0B1E33;
-        }
-
-        .login-form {
+        /* Custom styling */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: white;
-            padding: 40px;
-            border-radius: 8px;
-            width: 350px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .login-form h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #0B1E33;
-        }
-
-        .login-form input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .login-form button {
-            width: 100%;
-            padding: 10px;
-            background-color: #0B1E33;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-
-        .login-form .register-link {
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .login-form .register-link a {
-            color: #0B1E33;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .login-form .register-link a:hover {
-            text-decoration: underline;
-        }
-
-        .error {
-            color: red;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        /* App Layout */
-        .app {
+            border-top: 1px solid #e2e8f0;
             display: flex;
-            height: 100vh;
+            justify-content: space-around;
+            padding: 0.5rem 0;
+            z-index: 50;
+            overflow-x: auto;
         }
-
-        .sidebar {
-            width: 250px;
-            background-color: #0B1E33;
-            color: white;
+        .nav-item {
             display: flex;
             flex-direction: column;
-            padding: 20px 0;
-        }
-
-        .logo {
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-            padding: 20px;
-            border-bottom: 1px solid #2a3f5e;
-            margin-bottom: 20px;
-        }
-
-        .sidebar nav {
-            flex: 1;
-        }
-
-        .sidebar nav a {
-            display: flex;
             align-items: center;
-            padding: 12px 20px;
-            color: #ddd;
-            text-decoration: none;
-            transition: background 0.3s;
+            color: #4a5568;
+            font-size: 0.7rem;
             cursor: pointer;
+            min-width: 60px;
         }
-
-        .sidebar nav a:hover,
-        .sidebar nav a.active {
-            background-color: #1a2f4a;
-            color: white;
+        .nav-item.active {
+            color: #001f3f;
+            font-weight: 600;
         }
-
-        .sidebar nav a .icon {
-            margin-right: 10px;
-            font-size: 18px;
+        .nav-item i {
+            font-size: 1.25rem;
+            margin-bottom: 0.125rem;
         }
-
-        .logout {
-            padding: 20px;
-            border-top: 1px solid #2a3f5e;
-        }
-
-        .logout button {
-            width: 100%;
-            padding: 10px;
-            background-color: #c0392b;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .header {
-            background-color: white;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
         .content {
-            padding: 20px;
-            background-color: #fafafa;
-            flex: 1;
+            padding-bottom: 5rem;
         }
-
-        /* Cards */
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .card h3 {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .card p {
-            font-size: 24px;
-            font-weight: bold;
-            color: #0B1E33;
-        }
-
-        /* Table */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-top: 20px;
-        }
-
-        .data-table th {
-            background-color: #0B1E33;
-            color: white;
-            padding: 12px;
-            text-align: left;
-        }
-
-        .data-table td {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .data-table tr:hover {
-            background-color: #f5f5f5;
-        }
-
-        .data-table button {
-            margin-right: 5px;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .btn-edit {
-            background-color: #2980b9;
-            color: white;
-        }
-
-        .btn-delete {
-            background-color: #c0392b;
-            color: white;
-        }
-
-        .btn-toggle {
-            background-color: #f39c12;
-            color: white;
-        }
-
-        .status {
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: capitalize;
-        }
-
-        .status.active {
-            background-color: #27ae60;
-            color: white;
-        }
-
-        .status.suspended {
-            background-color: #f39c12;
-            color: white;
-        }
-
-        .status.expired {
-            background-color: #c0392b;
-            color: white;
-        }
-
-        .status.trial {
-            background-color: #3498db;
-            color: white;
-        }
-
-        /* Modal */
         .modal-overlay {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 100;
         }
-
-        .modal {
+        .modal-card {
             background: white;
-            border-radius: 8px;
-            width: 400px;
-            max-width: 90%;
-            max-height: 80vh;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .modal-header button {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-body label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .modal-body input,
-        .modal-body select {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .modal-body button {
-            width: 100%;
-            padding: 10px;
-            background-color: #0B1E33;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        /* Chat */
-        .chat-container {
+        .lock-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
             display: flex;
             flex-direction: column;
-            height: 100%;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
         }
-
-        .messages {
-            flex: 1;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: white;
-            border-radius: 5px;
-            height: 400px;
-        }
-
-        .message {
-            margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 5px;
-        }
-
-        .message.user {
-            background-color: #0B1E33;
+        .btn-navy {
+            background-color: #001f3f;
             color: white;
-            text-align: right;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: 0.2s;
         }
-
-        .message.assistant {
-            background-color: #f0f0f0;
-            color: #333;
+        .btn-navy:hover {
+            background-color: #003366;
         }
-
-        .typing {
-            color: #888;
-            font-style: italic;
-            padding: 5px;
+        .btn-outline-navy {
+            border: 1px solid #001f3f;
+            color: #001f3f;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
         }
-
-        .input-area {
-            display: flex;
-            gap: 10px;
+        .btn-outline-navy:hover {
+            background-color: #e6f0ff;
         }
-
-        .input-area input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .dark {
+            background-color: #1a202c;
+            color: #f7fafc;
         }
-
-        .input-area button {
-            padding: 10px 20px;
-            background-color: #0B1E33;
-            color: white;
-            border: none;
-            border-radius: 5px;
+        .dark .bg-white {
+            background-color: #2d3748;
+        }
+        .tab {
+            display: inline-block;
+            padding: 0.5rem 1rem;
             cursor: pointer;
+            border-bottom: 2px solid transparent;
         }
-
-        .suggestions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
+        .tab.active {
+            border-bottom-color: #001f3f;
+            font-weight: 600;
         }
-
-        .suggestion-chip {
-            background-color: #e0e0e0;
-            padding: 5px 10px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .suggestion-chip:hover {
-            background-color: #0B1E33;
-            color: white;
+        .hidden {
+            display: none;
         }
     </style>
 </head>
-<body>
-    <div id="app"></div>
-
-    <script>
-        // Firebase configuration (ganti dengan milik Anda)
-        const firebaseConfig = {
-            apiKey: "AIzaSyBkoz3onX4IRWium_QUjq-Nf-pnNsiMRU8",
-            authDomain: "heikasir.firebaseapp.com",
-            projectId: "heikasir",
-            storageBucket: "heikasir.firebasestorage.app",
-            messagingSenderId: "246718427847",
-            appId: "1:246718427847:web:4912ff8280132f71c344e2"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // Gemini API Key (ganti dengan milik sendiri)
-        const GEMINI_API_KEY = 'AIzaSyBjNPgHBfN2qiKrj9PNt3mjteu2Butt5wE'; // GANTI
-        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
-
-        // State management
-        let currentUser = null;
-        let currentView = 'dashboard';
-        let ownersData = [];
-        let revenuesData = [];
-        let logsData = [];
-        let expensesData = [];
-        let chatMessages = [];
-        let geminiUsage = [];
-
-        // Elemen root
-        const app = document.getElementById('app');
-
-        // Render function
-        function render() {
-            if (!currentUser) {
-                renderLogin();
-            } else {
-                renderApp();
-            }
-        }
-
-        // ================== LOGIN & REGISTRASI ==================
-        function renderLogin() {
-            app.innerHTML = `
-                <div class="login-container">
-                    <div class="login-form">
-                        <h2>Login Developer</h2>
-                        <div id="login-error" class="error"></div>
-                        <input type="email" id="email" placeholder="Email" required>
-                        <input type="password" id="password" placeholder="Password" required>
-                        <button onclick="handleLogin()">Masuk</button>
-                        <div class="register-link">
-                            <a href="#" onclick="showRegisterModal()">Belum punya akun? Daftar Developer</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Modal Registrasi Developer -->
-                <div id="registerModal" class="modal-overlay" style="display:none;">
-                    <div class="modal">
-                        <div class="modal-header">
-                            <h3>Registrasi Developer</h3>
-                            <button onclick="closeModal('registerModal')">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div id="register-error" class="error" style="margin-bottom:10px;"></div>
-                            <label>Nama Lengkap</label>
-                            <input type="text" id="regName" required>
-                            <label>Email</label>
-                            <input type="email" id="regEmail" required>
-                            <label>Password</label>
-                            <input type="password" id="regPassword" required>
-                            <label>Kode Rahasia</label>
-                            <input type="password" id="regSecret" placeholder="Masukkan kode rahasia" required>
-                            <button onclick="handleRegister()">Daftar</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        window.showRegisterModal = () => {
-            document.getElementById('registerModal').style.display = 'flex';
-        };
-
-        window.closeModal = (id) => {
-            document.getElementById(id).style.display = 'none';
-        };
-
-        window.handleRegister = async () => {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-            const secret = document.getElementById('regSecret').value;
-            const errorDiv = document.getElementById('register-error');
-
-            if (secret !== 'HEIKASIRDEV') {
-                errorDiv.innerText = 'Kode rahasia salah!';
-                return;
-            }
-
-            try {
-                // Buat user di Firebase Auth
-                const userCred = await auth.createUserWithEmailAndPassword(email, password);
-                const uid = userCred.user.uid;
-
-                // Simpan data developer di koleksi Master_Developers
-                await db.collection('Master_Developers').doc(uid).set({
-                    name: name,
-                    email: email,
-                    createdAt: firebase.firestore.Timestamp.now()
-                });
-
-                // Opsional: perbarui profil
-                await userCred.user.updateProfile({ displayName: name });
-
-                alert('Registrasi berhasil! Silakan login.');
-                closeModal('registerModal');
-            } catch (err) {
-                errorDiv.innerText = err.message;
-            }
-        };
-
-        window.handleLogin = async () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-                // Login sukses, auth state akan memicu render ulang
-            } catch (err) {
-                document.getElementById('login-error').innerText = err.message;
-            }
-        };
-
-        // ================== APP LAYOUT ==================
-        function renderApp() {
-            app.innerHTML = `
-                <div class="app">
-                    <div class="sidebar">
-                        <div class="logo">HeiKasir Master</div>
-                        <nav>
-                            <a class="${currentView === 'dashboard' ? 'active' : ''}" onclick="setView('dashboard')"><span class="icon">📊</span> Dashboard</a>
-                            <a class="${currentView === 'owners' ? 'active' : ''}" onclick="setView('owners')"><span class="icon">👥</span> Owners</a>
-                            <a class="${currentView === 'revenue' ? 'active' : ''}" onclick="setView('revenue')"><span class="icon">💰</span> Revenue</a>
-                            <a class="${currentView === 'logs' ? 'active' : ''}" onclick="setView('logs')"><span class="icon">📋</span> Logs</a>
-                            <a class="${currentView === 'expenses' ? 'active' : ''}" onclick="setView('expenses')"><span class="icon">💸</span> Expenses</a>
-                            <a class="${currentView === 'chat' ? 'active' : ''}" onclick="setView('chat')"><span class="icon">🤖</span> Chat AI</a>
-                        </nav>
-                        <div class="logout">
-                            <button onclick="handleLogout()">Logout</button>
-                        </div>
-                    </div>
-                    <div class="main-content">
-                        <div class="header">
-                            <h2>${getViewTitle()}</h2>
-                            <div class="user-info">${currentUser.email}</div>
-                        </div>
-                        <div class="content" id="content-area">
-                            <!-- konten dinamis -->
-                        </div>
-                    </div>
-                </div>
-            `;
-            loadViewData();
-        }
-
-        function getViewTitle() {
-            const titles = {
-                dashboard: 'Dashboard',
-                owners: 'Manajemen Owner',
-                revenue: 'Pendapatan Lisensi',
-                logs: 'Log Aktivitas',
-                expenses: 'Pengeluaran Developer',
-                chat: 'Chat AI'
-            };
-            return titles[currentView] || '';
-        }
-
-        window.setView = (view) => {
-            currentView = view;
-            renderApp();
-        };
-
-        window.handleLogout = () => {
-            auth.signOut();
-        };
-
-        // ================== LOAD DATA PER VIEW ==================
-        async function loadViewData() {
-            const content = document.getElementById('content-area');
-            if (!content) return;
-
-            if (currentView === 'dashboard') {
-                await loadDashboard(content);
-            } else if (currentView === 'owners') {
-                await loadOwners(content);
-            } else if (currentView === 'revenue') {
-                await loadRevenue(content);
-            } else if (currentView === 'logs') {
-                await loadLogs(content);
-            } else if (currentView === 'expenses') {
-                await loadExpenses(content);
-            } else if (currentView === 'chat') {
-                loadChat(content);
-            }
-        }
-
-        // Dashboard
-        async function loadDashboard(container) {
-            try {
-                const ownersSnap = await db.collection('Master_Owners').get();
-                const totalOwners = ownersSnap.size;
-                const activeOwners = ownersSnap.docs.filter(d => d.data().subscriptionStatus === 'active').length;
-
-                const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-                const revenueSnap = await db.collection('Master_Revenue')
-                    .where('paymentDate', '>=', startOfMonth)
-                    .where('paymentDate', '<=', endOfMonth)
-                    .get();
-                let totalRevenue = 0;
-                revenueSnap.forEach(d => totalRevenue += d.data().amount);
-
-                const expensesSnap = await db.collection('Master_Expenses')
-                    .where('timestamp', '>=', startOfMonth)
-                    .where('timestamp', '<=', endOfMonth)
-                    .get();
-                let totalExpenses = 0;
-                expensesSnap.forEach(d => totalExpenses += d.data().amount);
-                const profit = totalRevenue - totalExpenses;
-
-                const usage = ownersSnap.docs.map(d => ({
-                    name: d.data().ownerName,
-                    usage: d.data().geminiUsageCount || 0
-                })).sort((a,b) => b.usage - a.usage).slice(0,5);
-
-                let usageHtml = usage.map(u => `<tr><td>${u.name}</td><td>${u.usage}</td></tr>`).join('');
-
-                container.innerHTML = `
-                    <div class="cards">
-                        <div class="card"><h3>Total Owner Aktif</h3><p>${activeOwners} / ${totalOwners}</p></div>
-                        <div class="card"><h3>Pendapatan Bulan Ini</h3><p>Rp ${totalRevenue.toLocaleString()}</p></div>
-                        <div class="card"><h3>Profit Developer</h3><p>Rp ${profit.toLocaleString()}</p></div>
-                    </div>
-                    <div class="gemini-usage">
-                        <h3>Pengguna Gemini Teratas</h3>
-                        <table class="data-table">
-                            <thead><tr><th>Owner</th><th>Jumlah Panggilan</th></tr></thead>
-                            <tbody>${usageHtml}</tbody>
-                        </table>
-                    </div>
-                `;
-            } catch (err) {
-                container.innerHTML = `<p>Error: ${err.message}</p>`;
-            }
-        }
-
-        // Owners
-        async function loadOwners(container) {
-            try {
-                const snap = await db.collection('Master_Owners').get();
-                ownersData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                let rows = '';
-                ownersData.forEach(owner => {
-                    const expiry = owner.expiryDate ? new Date(owner.expiryDate.seconds * 1000).toLocaleDateString() : '-';
-                    rows += `
-                        <tr>
-                            <td>${owner.ownerName || ''}</td>
-                            <td>${owner.email || ''}</td>
-                            <td>${expiry}</td>
-                            <td>${owner.maxOutlets || 1}</td>
-                            <td><span class="status ${owner.subscriptionStatus}">${owner.subscriptionStatus}</span></td>
-                            <td>
-                                <button class="btn-edit" onclick="editOwner('${owner.id}')">Edit</button>
-                                <button class="btn-toggle" onclick="toggleOwnerStatus('${owner.id}', '${owner.subscriptionStatus}')">
-                                    ${owner.subscriptionStatus === 'active' ? 'Suspend' : 'Activate'}
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                container.innerHTML = `
-                    <h1>Manajemen Lisensi Owner</h1>
-                    <button onclick="showAddOwnerModal()">Tambah Owner Baru</button>
-                    <table class="data-table">
-                        <thead>
-                            <tr><th>Nama</th><th>Email</th><th>Expiry</th><th>Maks Outlet</th><th>Status</th><th>Aksi</th></tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-
-                    <!-- Modal Tambah Owner -->
-                    <div id="ownerModal" class="modal-overlay" style="display:none;">
-                        <div class="modal">
-                            <div class="modal-header">
-                                <h3>Tambah Owner Baru</h3>
-                                <button onclick="closeModal('ownerModal')">&times;</button>
-                            </div>
-                            <div class="modal-body">
-                                <label>Email</label>
-                                <input type="email" id="ownerEmail" required>
-                                <label>Nama Owner</label>
-                                <input type="text" id="ownerName" required>
-                                <label>Jumlah Bulan Lisensi</label>
-                                <input type="number" id="ownerMonths" min="1" value="1" required>
-                                <label>Maks Outlet</label>
-                                <input type="number" id="ownerMaxOutlets" min="1" value="1" required>
-                                <button onclick="addOwner()">Simpan</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Modal Edit Owner -->
-                    <div id="editOwnerModal" class="modal-overlay" style="display:none;">
-                        <div class="modal">
-                            <div class="modal-header">
-                                <h3>Edit Lisensi</h3>
-                                <button onclick="closeModal('editOwnerModal')">&times;</button>
-                            </div>
-                            <div class="modal-body">
-                                <input type="hidden" id="editOwnerId">
-                                <label>Expiry Date</label>
-                                <input type="date" id="editExpiry">
-                                <label>Maks Outlet</label>
-                                <input type="number" id="editMaxOutlets" min="1">
-                                <label>Status</label>
-                                <select id="editStatus">
-                                    <option value="active">Active</option>
-                                    <option value="suspended">Suspended</option>
-                                    <option value="expired">Expired</option>
-                                </select>
-                                <button onclick="updateOwner()">Update</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } catch (err) {
-                container.innerHTML = `<p>Error: ${err.message}</p>`;
-            }
-        }
-
-        window.showAddOwnerModal = () => {
-            document.getElementById('ownerModal').style.display = 'flex';
-        };
-
-        window.addOwner = async () => {
-            const email = document.getElementById('ownerEmail').value;
-            const name = document.getElementById('ownerName').value;
-            const months = parseInt(document.getElementById('ownerMonths').value);
-            const maxOutlets = parseInt(document.getElementById('ownerMaxOutlets').value);
-
-            try {
-                // Buat akun Firebase Auth untuk owner (password random, nanti reset)
-                const password = Math.random().toString(36).slice(-8);
-                const userCred = await auth.createUserWithEmailAndPassword(email, password);
-                const uid = userCred.user.uid;
-
-                const expiry = new Date();
-                expiry.setMonth(expiry.getMonth() + months);
-
-                await db.collection('Master_Owners').doc(uid).set({
-                    ownerId: uid,
-                    ownerName: name,
-                    email: email,
-                    maxOutlets: maxOutlets,
-                    expiryDate: firebase.firestore.Timestamp.fromDate(expiry),
-                    subscriptionStatus: 'active',
-                    pricePerMonth: 0,
-                    geminiUsageCount: 0,
-                    createdAt: firebase.firestore.Timestamp.now()
-                });
-
-                await db.collection('Master_Revenue').add({
-                    ownerId: uid,
-                    amount: 0,
-                    monthsPaid: months,
-                    paymentDate: firebase.firestore.Timestamp.now(),
-                    expiryDate: firebase.firestore.Timestamp.fromDate(expiry)
-                });
-
-                closeModal('ownerModal');
-                alert(`Owner berhasil ditambahkan. Password sementara: ${password}`);
-                loadOwners(document.getElementById('content-area'));
-            } catch (err) {
-                alert(err.message);
-            }
-        };
-
-        window.editOwner = (id) => {
-            const owner = ownersData.find(o => o.id === id);
-            if (!owner) return;
-            document.getElementById('editOwnerId').value = id;
-            document.getElementById('editExpiry').value = owner.expiryDate ? new Date(owner.expiryDate.seconds * 1000).toISOString().slice(0,10) : '';
-            document.getElementById('editMaxOutlets').value = owner.maxOutlets;
-            document.getElementById('editStatus').value = owner.subscriptionStatus;
-            document.getElementById('editOwnerModal').style.display = 'flex';
-        };
-
-        window.updateOwner = async () => {
-            const id = document.getElementById('editOwnerId').value;
-            const expiry = document.getElementById('editExpiry').value;
-            const maxOutlets = parseInt(document.getElementById('editMaxOutlets').value);
-            const status = document.getElementById('editStatus').value;
-
-            const updateData = {
-                maxOutlets: maxOutlets,
-                subscriptionStatus: status
-            };
-            if (expiry) {
-                updateData.expiryDate = firebase.firestore.Timestamp.fromDate(new Date(expiry));
-            }
-
-            await db.collection('Master_Owners').doc(id).update(updateData);
-            closeModal('editOwnerModal');
-            loadOwners(document.getElementById('content-area'));
-        };
-
-        window.toggleOwnerStatus = async (id, currentStatus) => {
-            const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-            await db.collection('Master_Owners').doc(id).update({ subscriptionStatus: newStatus });
-            loadOwners(document.getElementById('content-area'));
-        };
-
-        // Revenue
-        async function loadRevenue(container) {
-            try {
-                const snap = await db.collection('Master_Revenue').get();
-                revenuesData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                let rows = '';
-                revenuesData.forEach(rev => {
-                    rows += `
-                        <tr>
-                            <td>${rev.ownerId || ''}</td>
-                            <td>Rp ${(rev.amount || 0).toLocaleString()}</td>
-                            <td>${rev.monthsPaid || 0}</td>
-                            <td>${rev.paymentDate ? new Date(rev.paymentDate.seconds * 1000).toLocaleDateString() : ''}</td>
-                            <td>${rev.expiryDate ? new Date(rev.expiryDate.seconds * 1000).toLocaleDateString() : ''}</td>
-                        </tr>
-                    `;
-                });
-
-                container.innerHTML = `
-                    <h1>Pendapatan Lisensi</h1>
-                    <table class="data-table">
-                        <thead><tr><th>Owner ID</th><th>Jumlah</th><th>Bulan</th><th>Tanggal Bayar</th><th>Expiry Baru</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
-            } catch (err) {
-                container.innerHTML = `<p>Error: ${err.message}</p>`;
-            }
-        }
-
-        // Logs
-        async function loadLogs(container) {
-            try {
-                const snap = await db.collection('Master_Logs').orderBy('timestamp', 'desc').limit(100).get();
-                logsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                let rows = '';
-                logsData.forEach(log => {
-                    rows += `
-                        <tr>
-                            <td>${log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleString() : ''}</td>
-                            <td>${log.ownerId || ''}</td>
-                            <td>${log.action || ''}</td>
-                            <td>${log.details || ''}</td>
-                            <td>${log.ip || ''}</td>
-                        </tr>
-                    `;
-                });
-
-                container.innerHTML = `
-                    <h1>Log Aktivitas Owner</h1>
-                    <table class="data-table">
-                        <thead><tr><th>Waktu</th><th>Owner ID</th><th>Aksi</th><th>Detail</th><th>IP</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
-            } catch (err) {
-                container.innerHTML = `<p>Error: ${err.message}</p>`;
-            }
-        }
-
-        // Expenses
-        async function loadExpenses(container) {
-            try {
-                const snap = await db.collection('Master_Expenses').orderBy('timestamp', 'desc').get();
-                expensesData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                let rows = '';
-                expensesData.forEach(exp => {
-                    rows += `
-                        <tr>
-                            <td>${exp.category || ''}</td>
-                            <td>${exp.description || ''}</td>
-                            <td>Rp ${(exp.amount || 0).toLocaleString()}</td>
-                            <td>${exp.timestamp ? new Date(exp.timestamp.seconds * 1000).toLocaleDateString() : ''}</td>
-                        </tr>
-                    `;
-                });
-
-                container.innerHTML = `
-                    <h1>Pengeluaran Developer</h1>
-                    <button onclick="showAddExpenseModal()">Tambah Pengeluaran</button>
-                    <table class="data-table">
-                        <thead><tr><th>Kategori</th><th>Deskripsi</th><th>Nominal</th><th>Tanggal</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-
-                    <!-- Modal Tambah Expense -->
-                    <div id="expenseModal" class="modal-overlay" style="display:none;">
-                        <div class="modal">
-                            <div class="modal-header">
-                                <h3>Tambah Pengeluaran</h3>
-                                <button onclick="closeModal('expenseModal')">&times;</button>
-                            </div>
-                            <div class="modal-body">
-                                <label>Kategori</label>
-                                <input type="text" id="expCategory" required>
-                                <label>Deskripsi</label>
-                                <input type="text" id="expDesc" required>
-                                <label>Nominal</label>
-                                <input type="number" id="expAmount" required>
-                                <button onclick="addExpense()">Simpan</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } catch (err) {
-                container.innerHTML = `<p>Error: ${err.message}</p>`;
-            }
-        }
-
-        window.showAddExpenseModal = () => {
-            document.getElementById('expenseModal').style.display = 'flex';
-        };
-
-        window.addExpense = async () => {
-            const category = document.getElementById('expCategory').value;
-            const desc = document.getElementById('expDesc').value;
-            const amount = parseFloat(document.getElementById('expAmount').value);
-
-            await db.collection('Master_Expenses').add({
-                category,
-                description: desc,
-                amount,
-                timestamp: firebase.firestore.Timestamp.now()
-            });
-
-            closeModal('expenseModal');
-            loadExpenses(document.getElementById('content-area'));
-        };
-
-        // Chat AI
-        function loadChat(container) {
-            chatMessages = [];
-            container.innerHTML = `
-                <div class="chat-container">
-                    <h1>Chat AI Developer</h1>
-                    <div class="suggestions">
-                        <span class="suggestion-chip" onclick="setChatPrompt('Analisis profit developer bulan ini')">Analisis profit</span>
-                        <span class="suggestion-chip" onclick="setChatPrompt('Owner mana yang paling banyak menggunakan AI?')">Top pengguna AI</span>
-                        <span class="suggestion-chip" onclick="setChatPrompt('Rekomendasi untuk meningkatkan pendapatan')">Rekomendasi</span>
-                    </div>
-                    <div class="messages" id="chatMessages"></div>
-                    <div class="input-area">
-                        <input type="text" id="chatInput" placeholder="Tanya sesuatu..." onkeypress="if(event.key==='Enter') sendChatMessage()">
-                        <button onclick="sendChatMessage()">Kirim</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        window.setChatPrompt = (text) => {
-            document.getElementById('chatInput').value = text;
-        };
-
-        window.sendChatMessage = async () => {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
-
-            const messagesDiv = document.getElementById('chatMessages');
-            chatMessages.push({ role: 'user', content: text });
-            renderChatMessages(messagesDiv);
-
-            input.value = '';
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'typing';
-            typingDiv.id = 'typingIndicator';
-            typingDiv.innerText = 'AI sedang mengetik...';
-            messagesDiv.appendChild(typingDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-            try {
-                // Ambil konteks data developer
-                const ownersSnap = await db.collection('Master_Owners').get();
-                const totalOwners = ownersSnap.size;
-                const activeOwners = ownersSnap.docs.filter(d => d.data().subscriptionStatus === 'active').length;
-
-                const revenueSnap = await db.collection('Master_Revenue').get();
-                let totalRevenue = 0;
-                revenueSnap.forEach(d => totalRevenue += d.data().amount);
-
-                const expensesSnap = await db.collection('Master_Expenses').get();
-                let totalExpenses = 0;
-                expensesSnap.forEach(d => totalExpenses += d.data().amount);
-
-                const context = `Data developer: total owner ${totalOwners}, aktif ${activeOwners}, total pendapatan Rp ${totalRevenue.toLocaleString()}, total pengeluaran Rp ${totalExpenses.toLocaleString()}. `;
-                const prompt = context + text;
-
-                const response = await fetch(GEMINI_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
-                    })
-                });
-                const data = await response.json();
-                let reply = '';
-                if (data.candidates && data.candidates[0]) {
-                    reply = data.candidates[0].content.parts[0].text;
-                } else {
-                    reply = 'Maaf, tidak ada respons.';
-                }
-
-                document.getElementById('typingIndicator')?.remove();
-                chatMessages.push({ role: 'assistant', content: reply });
-                renderChatMessages(messagesDiv);
-            } catch (err) {
-                document.getElementById('typingIndicator')?.remove();
-                chatMessages.push({ role: 'assistant', content: 'Error: ' + err.message });
-                renderChatMessages(messagesDiv);
-            }
-        };
-
-        function renderChatMessages(container) {
-            container.innerHTML = '';
-            chatMessages.forEach(msg => {
-                const div = document.createElement('div');
-                div.className = `message ${msg.role}`;
-                div.innerText = msg.content;
-                container.appendChild(div);
-            });
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // Auth state observer
-        auth.onAuthStateChanged(user => {
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+<!-- Overlay Lisensi -->
+<div id="lockOverlay" class="lock-overlay hidden">
+    <i class="fas fa-lock text-6xl text-navy-800 mb-4"></i>
+    <h2 class="text-2xl font-bold mb-2">Akses Terkunci</h2>
+    <p id="lockMessage" class="text-gray-600 mb-4">Lisensi tidak aktif</p>
+    <button onclick="window.location.reload()" class="btn-navy">Coba Lagi</button>
+</div>
+
+<!-- Modal Container -->
+<div id="modalContainer" class="hidden"></div>
+
+<!-- Konten Utama (setelah login & lisensi aktif) -->
+<div id="appContent" class="hidden">
+    <!-- Bottom Navigation (8 item) -->
+    <div class="bottom-nav" id="bottomNav">
+        <div class="nav-item active" data-page="dashboard"><i class="fas fa-home"></i><span>Beranda</span></div>
+        <div class="nav-item" data-page="outlets"><i class="fas fa-store"></i><span>Outlet</span></div>
+        <div class="nav-item" data-page="employees"><i class="fas fa-users"></i><span>Pegawai</span></div>
+        <div class="nav-item" data-page="menu"><i class="fas fa-utensils"></i><span>Menu</span></div>
+        <div class="nav-item" data-page="stock"><i class="fas fa-boxes"></i><span>Stok</span></div>
+        <div class="nav-item" data-page="expenses"><i class="fas fa-money-bill"></i><span>Pengeluaran</span></div>
+        <div class="nav-item" data-page="reports"><i class="fas fa-chart-bar"></i><span>Laporan</span></div>
+        <div class="nav-item" data-page="profile"><i class="fas fa-user"></i><span>Profil</span></div>
+    </div>
+    <!-- Halaman konten -->
+    <div id="pageContent" class="content p-4"></div>
+</div>
+
+<!-- Halaman Login/Registrasi -->
+<div id="authContainer" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-navy-800">HeiKasir</h1>
+            <p class="text-gray-500">Owner Panel</p>
+        </div>
+        <div id="authTabs" class="flex mb-4 border-b">
+            <button id="tabLogin" class="flex-1 py-2 text-center font-medium border-b-2 border-navy-800">Masuk</button>
+            <button id="tabRegister" class="flex-1 py-2 text-center font-medium text-gray-500">Daftar</button>
+        </div>
+        <div id="loginForm" class="space-y-4">
+            <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 border rounded-lg">
+            <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border rounded-lg">
+            <button id="loginBtn" class="w-full btn-navy py-3">Masuk</button>
+            <p class="text-sm text-center text-gray-500">
+                Lupa password? <a href="#" onclick="resetPassword()" class="text-navy-800">Reset</a>
+            </p>
+        </div>
+        <div id="registerForm" class="space-y-4 hidden">
+            <input type="text" id="regName" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg">
+            <input type="email" id="regEmail" placeholder="Email" class="w-full p-3 border rounded-lg">
+            <input type="tel" id="regPhone" placeholder="Nomor WA" class="w-full p-3 border rounded-lg">
+            <input type="password" id="regPassword" placeholder="Password (min. 6 karakter)" class="w-full p-3 border rounded-lg">
+            <input type="password" id="regConfirmPassword" placeholder="Konfirmasi Password" class="w-full p-3 border rounded-lg">
+            <button id="registerBtn" class="w-full btn-navy py-3">Daftar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== KONFIGURASI FIREBASE ====================
+    const firebaseConfig = {
+        apiKey: "AIzaSyBkoz3onX4IRWium_QUjq-Nf-pnNsiMRU8",
+        authDomain: "heikasir.firebaseapp.com",
+        projectId: "heikasir",
+        storageBucket: "heikasir.firebasestorage.app",
+        messagingSenderId: "246718427847",
+        appId: "1:246718427847:web:4912ff8280132f71c344e2"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // ==================== STATE GLOBAL ====================
+    let currentUser = null;
+    let currentOwnerId = null;
+    let licenseData = null;
+    let currentPage = 'dashboard';
+
+    // Elemen DOM
+    const authContainer = document.getElementById('authContainer');
+    const appContent = document.getElementById('appContent');
+    const lockOverlay = document.getElementById('lockOverlay');
+    const lockMessage = document.getElementById('lockMessage');
+    const pageContent = document.getElementById('pageContent');
+
+    // ==================== AUTH LISTENER ====================
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
             currentUser = user;
-            render();
+            currentOwnerId = user.uid;
+            const valid = await checkLicense();
+            if (valid) {
+                authContainer.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                loadPage(currentPage);
+            } else {
+                authContainer.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                lockOverlay.classList.remove('hidden');
+            }
+        } else {
+            authContainer.classList.remove('hidden');
+            appContent.classList.add('hidden');
+            lockOverlay.classList.add('hidden');
+        }
+    });
+
+    // ==================== CEK LISENSI ====================
+    async function checkLicense() {
+        if (!currentUser) return false;
+        const ownerId = currentUser.uid;
+        try {
+            const doc = await db.collection('Master_Owners').doc(ownerId).get();
+            if (!doc.exists) {
+                lockMessage.innerText = 'Data owner tidak ditemukan. Hubungi developer.';
+                return false;
+            }
+            const data = doc.data();
+            const expiry = data.expiryDate ? data.expiryDate.toDate() : new Date(0);
+            const now = new Date();
+            if (data.status !== 'active') {
+                lockMessage.innerText = 'Lisensi belum aktif. Hubungi developer.';
+                return false;
+            }
+            if (expiry < now) {
+                lockMessage.innerText = 'Masa aktif lisensi telah habis.';
+                return false;
+            }
+            // Simpan di localStorage untuk offline check (opsional)
+            localStorage.setItem('hei_license', JSON.stringify({ expiry: expiry.getTime(), status: data.status }));
+            return true;
+        } catch (e) {
+            console.error(e);
+            lockMessage.innerText = 'Gagal memeriksa lisensi. Periksa koneksi.';
+            return false;
+        }
+    }
+
+    // ==================== NAVIGASI ====================
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            currentPage = item.dataset.page;
+            loadPage(currentPage);
+        });
+    });
+
+    function loadPage(page) {
+        switch(page) {
+            case 'dashboard': renderDashboard(); break;
+            case 'outlets': renderOutlets(); break;
+            case 'employees': renderEmployees(); break;
+            case 'menu': renderMenu(); break;
+            case 'stock': renderStock(); break;
+            case 'expenses': renderExpenses(); break;
+            case 'reports': renderReports(); break;
+            case 'profile': renderProfile(); break;
+            default: renderDashboard();
+        }
+    }
+
+    // ==================== DASHBOARD ====================
+    let incomeToday = 0, expenseToday = 0, profitToday = 0, voidToday = 0;
+    let incomeChart;
+
+    function renderDashboard() {
+        pageContent.innerHTML = `
+            <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="flex items-center justify-between"><span class="text-gray-500">Pemasukan</span><i class="fas fa-arrow-up text-green-500"></i></div>
+                    <div class="text-2xl font-bold" id="incomeToday">Rp 0</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="flex items-center justify-between"><span class="text-gray-500">Pengeluaran</span><i class="fas fa-arrow-down text-red-500"></i></div>
+                    <div class="text-2xl font-bold" id="expenseToday">Rp 0</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="flex items-center justify-between"><span class="text-gray-500">Profit</span><i class="fas fa-chart-line text-blue-500"></i></div>
+                    <div class="text-2xl font-bold" id="profitToday">Rp 0</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="flex items-center justify-between"><span class="text-gray-500">Void</span><i class="fas fa-times text-red-500"></i></div>
+                    <div class="text-2xl font-bold" id="voidToday">0</div>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h2 class="font-semibold mb-2">Perkembangan 7 Hari</h2>
+                    <canvas id="incomeChart" height="200"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h2 class="font-semibold mb-2">Menu Favorit</h2>
+                    <ul id="topMenuList" class="space-y-2"></ul>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h2 class="font-semibold mb-2">Stok Menipis</h2>
+                <div id="stockLimitList" class="space-y-2"></div>
+            </div>
+        `;
+
+        const today = new Date(); today.setHours(0,0,0,0);
+        const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+
+        // Pemasukan & void
+        const transQuery = db.collection('Owners').doc(currentOwnerId).collection('Transactions')
+            .where('timestamp', '>=', today).where('timestamp', '<', tomorrow);
+        const unsubTrans = transQuery.onSnapshot(snapshot => {
+            incomeToday = 0; voidToday = 0;
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (!data.isVoid) incomeToday += data.totalPayment || 0;
+                else voidToday++;
+            });
+            updateDashboardNumbers();
         });
 
-        // Initial render
-        render();
-    </script>
+        // Pengeluaran (non-stok)
+        const expQuery = db.collection('Owners').doc(currentOwnerId).collection('Expenses')
+            .where('timestamp', '>=', today).where('timestamp', '<', tomorrow)
+            .where('isStockPurchase', '==', false);
+        const unsubExp = expQuery.onSnapshot(snapshot => {
+            expenseToday = 0;
+            snapshot.forEach(doc => expenseToday += doc.data().amount || 0);
+            updateDashboardNumbers();
+        });
+
+        loadChartData();
+        loadTopMenu();
+        loadStockLimit();
+
+        function updateDashboardNumbers() {
+            profitToday = incomeToday - expenseToday; // sederhana, belum dikurangi HPP
+            document.getElementById('incomeToday').innerText = formatRupiah(incomeToday);
+            document.getElementById('expenseToday').innerText = formatRupiah(expenseToday);
+            document.getElementById('profitToday').innerText = formatRupiah(profitToday);
+            document.getElementById('voidToday').innerText = voidToday;
+        }
+    }
+
+    async function loadChartData() {
+        const labels = [], data = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
+            const next = new Date(d); next.setDate(d.getDate() + 1);
+            labels.push(d.toLocaleDateString('id-ID', { weekday:'short', day:'numeric' }));
+            const snap = await db.collection('Owners').doc(currentOwnerId).collection('Transactions')
+                .where('timestamp', '>=', d).where('timestamp', '<', next).where('isVoid', '==', false).get();
+            let total = 0;
+            snap.forEach(doc => total += doc.data().totalPayment || 0);
+            data.push(total);
+        }
+        if (incomeChart) incomeChart.destroy();
+        const ctx = document.getElementById('incomeChart').getContext('2d');
+        incomeChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ label: 'Pemasukan', data, borderColor: '#001f3f', backgroundColor: 'rgba(0,31,63,0.1)', tension: 0.3 }] },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    }
+
+    async function loadTopMenu() {
+        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Transactions')
+            .where('timestamp', '>=', thirtyDaysAgo).where('isVoid', '==', false).get();
+        const menuCount = {};
+        snap.forEach(doc => {
+            (doc.data().items || []).forEach(item => {
+                menuCount[item.name] = (menuCount[item.name] || 0) + item.qty;
+            });
+        });
+        const sorted = Object.entries(menuCount).sort((a,b) => b[1] - a[1]).slice(0,5);
+        const list = document.getElementById('topMenuList');
+        list.innerHTML = sorted.map(([name, qty]) => `<li class="flex justify-between"><span>${name}</span><span class="font-semibold">${qty} terjual</span></li>`).join('');
+    }
+
+    async function loadStockLimit() {
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').get();
+        const list = document.getElementById('stockLimitList');
+        list.innerHTML = '';
+        snap.forEach(doc => {
+            const ing = doc.data();
+            if (ing.currentStock <= ing.minStock) {
+                list.innerHTML += `
+                    <div class="flex justify-between items-center">
+                        <span>${ing.name} (${ing.currentStock} ${ing.unit})</span>
+                        <button onclick="showStockInModal('${doc.id}')" class="text-sm btn-outline-navy py-1 px-2">Stok Masuk</button>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    // ==================== OUTLET ====================
+    function renderOutlets() {
+        pageContent.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Outlet</h1>
+                <button onclick="showAddOutletModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah</button>
+            </div>
+            <div id="outletGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        `;
+        loadOutlets();
+    }
+
+    async function loadOutlets() {
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Outlets').get();
+        const grid = document.getElementById('outletGrid');
+        grid.innerHTML = '';
+        snap.forEach(doc => {
+            const outlet = doc.data();
+            grid.innerHTML += `
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="font-bold">${outlet.name}</h3>
+                    <p class="text-sm text-gray-600">${outlet.address || '-'}</p>
+                    <p class="text-sm">Stok: ${outlet.stockMode == 'global' ? 'Global' : 'Lokal'}</p>
+                    <div class="flex mt-2 space-x-2">
+                        <button onclick="editOutlet('${doc.id}')" class="text-sm btn-outline-navy py-1 px-2">Edit</button>
+                        <button onclick="deleteOutlet('${doc.id}')" class="text-sm text-red-600"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function showAddOutletModal() {
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Outlet</h2>
+            <input type="text" id="outletName" placeholder="Nama Outlet" class="w-full p-2 border rounded mb-3">
+            <input type="text" id="outletAddress" placeholder="Alamat" class="w-full p-2 border rounded mb-3">
+            <input type="text" id="outletPhone" placeholder="Telepon" class="w-full p-2 border rounded mb-3">
+            <div class="mb-3">
+                <label class="block mb-1">Mode Stok</label>
+                <label class="inline-flex items-center mr-4"><input type="radio" name="stockMode" value="global" checked> Global</label>
+                <label class="inline-flex items-center"><input type="radio" name="stockMode" value="local"> Lokal</label>
+            </div>
+            <button onclick="saveOutlet()" class="btn-navy w-full">Simpan</button>
+        `);
+    }
+
+    async function saveOutlet() {
+        const name = document.getElementById('outletName').value;
+        const address = document.getElementById('outletAddress').value;
+        const phone = document.getElementById('outletPhone').value;
+        const stockMode = document.querySelector('input[name="stockMode"]:checked').value;
+        if (!name) return alert('Nama harus diisi');
+        await db.collection('Owners').doc(currentOwnerId).collection('Outlets').add({
+            name, address, phone, stockMode,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        closeModal();
+        loadOutlets();
+    }
+
+    function editOutlet(id) {
+        alert('Fitur edit outlet akan segera hadir');
+    }
+
+    function deleteOutlet(id) {
+        if (confirm('Hapus outlet ini?')) {
+            db.collection('Owners').doc(currentOwnerId).collection('Outlets').doc(id).delete();
+            loadOutlets();
+        }
+    }
+
+    // ==================== PEGAWAI ====================
+    function renderEmployees() {
+        pageContent.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Pegawai</h1>
+                <button onclick="showAddEmployeeModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah</button>
+            </div>
+            <div id="employeeTable"></div>
+        `;
+        loadEmployees();
+    }
+
+    async function loadEmployees() {
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Employees').get();
+        let html = '<table class="w-full"><thead><tr class="bg-gray-100"><th class="p-2 text-left">Nama</th><th>Outlet</th><th>Role</th><th>Shift</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
+        snap.forEach(doc => {
+            const emp = doc.data();
+            html += `<tr class="border-b">
+                <td class="p-2">${emp.name}</td>
+                <td class="p-2">${emp.outletId}</td>
+                <td class="p-2">${emp.role}</td>
+                <td class="p-2">${emp.shift || '-'}</td>
+                <td class="p-2">${emp.isActive ? 'Aktif' : 'Nonaktif'}</td>
+                <td class="p-2">
+                    <button onclick="editEmployee('${doc.id}')" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
+                    <button onclick="resetPinEmployee('${doc.id}')" class="text-green-600"><i class="fas fa-key"></i></button>
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('employeeTable').innerHTML = html;
+    }
+
+    function showAddEmployeeModal() {
+        // Load outlets for dropdown
+        db.collection('Owners').doc(currentOwnerId).collection('Outlets').get().then(snap => {
+            let options = '';
+            snap.forEach(doc => options += `<option value="${doc.id}">${doc.data().name}</option>`);
+            showModal(`
+                <h2 class="text-xl font-bold mb-4">Tambah Pegawai</h2>
+                <input type="text" id="empName" placeholder="Nama" class="w-full p-2 border rounded mb-3">
+                <input type="text" id="empPhone" placeholder="Nomor WA" class="w-full p-2 border rounded mb-3">
+                <select id="empOutlet" class="w-full p-2 border rounded mb-3">${options}</select>
+                <select id="empRole" class="w-full p-2 border rounded mb-3">
+                    <option value="kasir">Kasir</option>
+                    <option value="head">Kepala Toko</option>
+                </select>
+                <select id="empShift" class="w-full p-2 border rounded mb-3">
+                    <option value="pagi">Pagi</option>
+                    <option value="siang">Siang</option>
+                    <option value="malam">Malam</option>
+                </select>
+                <input type="number" id="empSalary" placeholder="Gaji" class="w-full p-2 border rounded mb-3">
+                <input type="password" id="empPin" placeholder="PIN (4-6 digit)" class="w-full p-2 border rounded mb-3">
+                <input type="password" id="empPinConfirm" placeholder="Konfirmasi PIN" class="w-full p-2 border rounded mb-3">
+                <button onclick="saveEmployee()" class="btn-navy w-full">Simpan</button>
+            `);
+        });
+    }
+
+    async function saveEmployee() {
+        const name = document.getElementById('empName').value;
+        const phone = document.getElementById('empPhone').value;
+        const outletId = document.getElementById('empOutlet').value;
+        const role = document.getElementById('empRole').value;
+        const shift = document.getElementById('empShift').value;
+        const salary = parseInt(document.getElementById('empSalary').value);
+        const pin = document.getElementById('empPin').value;
+        const pinConfirm = document.getElementById('empPinConfirm').value;
+        if (!name || !pin || pin.length < 4 || pin !== pinConfirm) return alert('Data tidak valid');
+        await db.collection('Owners').doc(currentOwnerId).collection('Employees').add({
+            name, phone, outletId, role, shift, salary, pin, // plain pin (tidak aman, untuk contoh)
+            isActive: true,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Pegawai ditambahkan');
+        closeModal();
+        loadEmployees();
+    }
+
+    function editEmployee(id) {
+        alert('Edit pegawai');
+    }
+
+    function resetPinEmployee(id) {
+        const newPin = prompt('Masukkan PIN baru (4-6 digit)');
+        if (newPin && newPin.length >= 4) {
+            db.collection('Owners').doc(currentOwnerId).collection('Employees').doc(id).update({ pin: newPin });
+            alert('PIN diperbarui');
+        }
+    }
+
+    // ==================== MENU (dengan kategori, satuan, varian) ====================
+    function renderMenu() {
+        pageContent.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Menu</h1>
+                <div>
+                    <button onclick="showAddMenuModal()" class="btn-navy mr-2"><i class="fas fa-plus"></i> Menu</button>
+                    <button onclick="syncHpp()" class="btn-outline-navy">Sync HPP</button>
+                </div>
+            </div>
+            <div class="border-b mb-4">
+                <span class="tab active" data-tab="menu-list">Daftar Menu</span>
+                <span class="tab" data-tab="categories">Kategori</span>
+                <span class="tab" data-tab="units">Satuan</span>
+                <span class="tab" data-tab="variants">Varian</span>
+            </div>
+            <div id="menuTabContent"></div>
+        `;
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const tabName = tab.dataset.tab;
+                if (tabName === 'menu-list') loadMenuList();
+                else if (tabName === 'categories') loadCategories();
+                else if (tabName === 'units') loadUnits();
+                else if (tabName === 'variants') loadVariants();
+            });
+        });
+        loadMenuList();
+    }
+
+    async function loadMenuList() {
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Menu').orderBy('gridIndex').get();
+        let html = '<div class="grid grid-cols-2 md:grid-cols-4 gap-4">';
+        snap.forEach(doc => {
+            const menu = doc.data();
+            html += `
+                <div class="bg-white p-2 rounded-lg shadow">
+                    <img src="${menu.imageUrl || 'https://via.placeholder.com/150'}" class="w-full h-24 object-cover rounded">
+                    <h3 class="font-bold mt-1">${menu.name}</h3>
+                    <p class="text-sm">Rp ${menu.prices?.tunai || 0}</p>
+                    <p class="text-xs text-gray-500">HPP: Rp ${menu.calculatedHpp || 0}</p>
+                    <div class="flex mt-1">
+                        <button onclick="editMenu('${doc.id}')" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
+                        <button onclick="toggleMenuActive('${doc.id}', ${!menu.isActive})" class="text-${menu.isActive ? 'red' : 'green'}-600"><i class="fas ${menu.isActive ? 'fa-ban' : 'fa-check'}"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        document.getElementById('menuTabContent').innerHTML = html;
+    }
+
+    async function loadCategories() {
+        // For simplicity, we'll store categories in a separate subcollection 'Categories'
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Categories').get();
+        let html = '<div class="mb-4"><button onclick="showAddCategoryModal()" class="btn-navy">Tambah Kategori</button></div>';
+        html += '<ul>';
+        snap.forEach(doc => {
+            const cat = doc.data();
+            html += `<li class="flex justify-between items-center p-2 border-b">${cat.name} <button onclick="deleteCategory('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></li>`;
+        });
+        html += '</ul>';
+        document.getElementById('menuTabContent').innerHTML = html;
+    }
+
+    function showAddCategoryModal() {
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Kategori</h2>
+            <input type="text" id="categoryName" placeholder="Nama Kategori" class="w-full p-2 border rounded mb-3">
+            <button onclick="saveCategory()" class="btn-navy w-full">Simpan</button>
+        `);
+    }
+
+    async function saveCategory() {
+        const name = document.getElementById('categoryName').value;
+        if (!name) return alert('Nama harus diisi');
+        await db.collection('Owners').doc(currentOwnerId).collection('Categories').add({ name });
+        closeModal();
+        loadCategories();
+    }
+
+    function deleteCategory(id) {
+        if (confirm('Hapus kategori?')) {
+            db.collection('Owners').doc(currentOwnerId).collection('Categories').doc(id).delete();
+            loadCategories();
+        }
+    }
+
+    async function loadUnits() {
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Units').get();
+        let html = '<div class="mb-4"><button onclick="showAddUnitModal()" class="btn-navy">Tambah Satuan</button></div>';
+        html += '<ul>';
+        snap.forEach(doc => {
+            const unit = doc.data();
+            html += `<li class="flex justify-between items-center p-2 border-b">${unit.name} <button onclick="deleteUnit('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></li>`;
+        });
+        html += '</ul>';
+        document.getElementById('menuTabContent').innerHTML = html;
+    }
+
+    function showAddUnitModal() {
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Satuan</h2>
+            <input type="text" id="unitName" placeholder="Nama Satuan (cth: Cup, Gram)" class="w-full p-2 border rounded mb-3">
+            <button onclick="saveUnit()" class="btn-navy w-full">Simpan</button>
+        `);
+    }
+
+    async function saveUnit() {
+        const name = document.getElementById('unitName').value;
+        if (!name) return alert('Nama harus diisi');
+        await db.collection('Owners').doc(currentOwnerId).collection('Units').add({ name });
+        closeModal();
+        loadUnits();
+    }
+
+    function deleteUnit(id) {
+        if (confirm('Hapus satuan?')) {
+            db.collection('Owners').doc(currentOwnerId).collection('Units').doc(id).delete();
+            loadUnits();
+        }
+    }
+
+    async function loadVariants() {
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Variants').get();
+        let html = '<div class="mb-4"><button onclick="showAddVariantModal()" class="btn-navy">Tambah Varian</button></div>';
+        html += '<ul>';
+        snap.forEach(doc => {
+            const variant = doc.data();
+            html += `<li class="flex justify-between items-center p-2 border-b">${variant.name} <button onclick="deleteVariant('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></li>`;
+        });
+        html += '</ul>';
+        document.getElementById('menuTabContent').innerHTML = html;
+    }
+
+    function showAddVariantModal() {
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Varian</h2>
+            <input type="text" id="variantName" placeholder="Nama Varian (cth: Panas, Dingin)" class="w-full p-2 border rounded mb-3">
+            <button onclick="saveVariant()" class="btn-navy w-full">Simpan</button>
+        `);
+    }
+
+    async function saveVariant() {
+        const name = document.getElementById('variantName').value;
+        if (!name) return alert('Nama harus diisi');
+        await db.collection('Owners').doc(currentOwnerId).collection('Variants').add({ name });
+        closeModal();
+        loadVariants();
+    }
+
+    function deleteVariant(id) {
+        if (confirm('Hapus varian?')) {
+            db.collection('Owners').doc(currentOwnerId).collection('Variants').doc(id).delete();
+            loadVariants();
+        }
+    }
+
+    function showAddMenuModal() {
+        // Load categories, units, variants for dropdowns
+        Promise.all([
+            db.collection('Owners').doc(currentOwnerId).collection('Categories').get(),
+            db.collection('Owners').doc(currentOwnerId).collection('Units').get(),
+            db.collection('Owners').doc(currentOwnerId).collection('Variants').get(),
+            db.collection('Owners').doc(currentOwnerId).collection('Ingredients').get()
+        ]).then(([catSnap, unitSnap, varSnap, ingSnap]) => {
+            let catOptions = '<option value="">Pilih Kategori</option>';
+            catSnap.forEach(doc => catOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
+            let unitOptions = '<option value="">Pilih Satuan</option>';
+            unitSnap.forEach(doc => unitOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
+            let varOptions = '<option value="">Pilih Varian (opsional)</option>';
+            varSnap.forEach(doc => varOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
+            let ingOptions = '';
+            ingSnap.forEach(doc => ingOptions += `<option value="${doc.id}" data-price="${doc.data().avgBuyPrice || 0}">${doc.data().name}</option>`);
+
+            showModal(`
+                <h2 class="text-xl font-bold mb-4">Tambah Menu</h2>
+                <input type="text" id="menuName" placeholder="Nama Menu" class="w-full p-2 border rounded mb-3">
+                <select id="menuCategory" class="w-full p-2 border rounded mb-3">${catOptions}</select>
+                <select id="menuUnit" class="w-full p-2 border rounded mb-3">${unitOptions}</select>
+                <select id="menuVariant" class="w-full p-2 border rounded mb-3">${varOptions}</select>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <input type="number" id="priceTunai" placeholder="Harga Tunai" class="p-2 border rounded">
+                    <input type="number" id="priceTransfer" placeholder="Harga Transfer" class="p-2 border rounded">
+                    <input type="number" id="priceGofood" placeholder="Harga GoFood" class="p-2 border rounded">
+                    <input type="number" id="priceShopeefood" placeholder="Harga ShopeeFood" class="p-2 border rounded">
+                </div>
+                <div class="mb-3">
+                    <label class="block">Diskon GoFood (%)</label>
+                    <input type="number" id="discountGofood" value="0" class="w-full p-2 border rounded">
+                </div>
+                <div class="mb-3">
+                    <label class="block">Diskon ShopeeFood (%)</label>
+                    <input type="number" id="discountShopeefood" value="0" class="w-full p-2 border rounded">
+                </div>
+                <div class="mb-3">
+                    <label class="block">PPN (%)</label>
+                    <input type="number" id="taxPpn" value="0" class="w-full p-2 border rounded">
+                </div>
+                <h3 class="font-bold mb-2">Resep (Bahan Baku)</h3>
+                <div id="recipeContainer">
+                    <div class="flex gap-2 mb-2">
+                        <select class="recipe-ingredient w-1/2 p-2 border rounded">${ingOptions}</select>
+                        <input type="number" class="recipe-qty w-1/4 p-2 border rounded" placeholder="Qty">
+                        <button type="button" onclick="addRecipeRow()" class="text-green-600"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="block">HPP (dihitung otomatis)</label>
+                    <input type="number" id="calculatedHpp" class="w-full p-2 border rounded bg-gray-100" readonly>
+                </div>
+                <button onclick="saveMenu()" class="btn-navy w-full">Simpan</button>
+            `);
+        });
+    }
+
+    function addRecipeRow() {
+        const container = document.getElementById('recipeContainer');
+        const row = document.createElement('div');
+        row.className = 'flex gap-2 mb-2';
+        row.innerHTML = `
+            <select class="recipe-ingredient w-1/2 p-2 border rounded">${document.querySelector('.recipe-ingredient').innerHTML}</select>
+            <input type="number" class="recipe-qty w-1/4 p-2 border rounded" placeholder="Qty">
+            <button type="button" onclick="this.parentElement.remove()" class="text-red-600"><i class="fas fa-minus"></i></button>
+        `;
+        container.appendChild(row);
+    }
+
+    async function saveMenu() {
+        // Collect data
+        const name = document.getElementById('menuName').value;
+        const category = document.getElementById('menuCategory').value;
+        const unit = document.getElementById('menuUnit').value;
+        const variant = document.getElementById('menuVariant').value;
+        const prices = {
+            tunai: parseFloat(document.getElementById('priceTunai').value) || 0,
+            transfer: parseFloat(document.getElementById('priceTransfer').value) || 0,
+            gofood: parseFloat(document.getElementById('priceGofood').value) || 0,
+            shopeefood: parseFloat(document.getElementById('priceShopeefood').value) || 0
+        };
+        const discounts = {
+            gofood: parseFloat(document.getElementById('discountGofood').value) || 0,
+            shopeefood: parseFloat(document.getElementById('discountShopeefood').value) || 0
+        };
+        const taxPpn = parseFloat(document.getElementById('taxPpn').value) || 0;
+
+        // Recipe
+        const recipe = [];
+        const ingredientRows = document.querySelectorAll('#recipeContainer .flex');
+        ingredientRows.forEach(row => {
+            const ingSelect = row.querySelector('.recipe-ingredient');
+            const qty = parseFloat(row.querySelector('.recipe-qty').value);
+            if (ingSelect.value && qty) {
+                recipe.push({ ingId: ingSelect.value, qty });
+            }
+        });
+
+        // Calculate HPP
+        let hpp = 0;
+        for (let item of recipe) {
+            const ingDoc = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc(item.ingId).get();
+            if (ingDoc.exists) {
+                hpp += (ingDoc.data().avgBuyPrice || 0) * item.qty;
+            }
+        }
+        document.getElementById('calculatedHpp').value = hpp;
+
+        // Save menu
+        await db.collection('Owners').doc(currentOwnerId).collection('Menu').add({
+            name, category, unit, variant, prices, discounts, taxPpn, recipe,
+            calculatedHpp: hpp,
+            gridIndex: 0,
+            isActive: true,
+            imageUrl: '',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Menu ditambahkan');
+        closeModal();
+        loadMenuList();
+    }
+
+    function editMenu(id) {
+        alert('Edit menu: ' + id);
+    }
+
+    function toggleMenuActive(id, active) {
+        db.collection('Owners').doc(currentOwnerId).collection('Menu').doc(id).update({ isActive: active });
+    }
+
+    async function syncHpp() {
+        // Update HPP for all menus based on latest ingredient prices
+        const menusSnap = await db.collection('Owners').doc(currentOwnerId).collection('Menu').get();
+        const batch = db.batch();
+        for (const doc of menusSnap.docs) {
+            const menu = doc.data();
+            let hpp = 0;
+            if (menu.recipe) {
+                for (const item of menu.recipe) {
+                    const ingDoc = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc(item.ingId).get();
+                    if (ingDoc.exists) {
+                        hpp += (ingDoc.data().avgBuyPrice || 0) * item.qty;
+                    }
+                }
+            }
+            batch.update(doc.ref, { calculatedHpp: hpp });
+        }
+        await batch.commit();
+        alert('HPP semua menu telah disinkronisasi');
+    }
+
+    // ==================== STOK (Bahan Baku) ====================
+    function renderStock() {
+        pageContent.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Manajemen Stok</h1>
+                <button onclick="showAddIngredientModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah Bahan</button>
+            </div>
+            <div id="ingredientsTable"></div>
+        `;
+        loadIngredients();
+    }
+
+    async function loadIngredients() {
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').get();
+        let html = '<table class="w-full"><thead><tr class="bg-gray-100"><th>Nama</th><th>Satuan</th><th>Stok</th><th>Min</th><th>Harga Rata</th><th>Aksi</th></tr></thead><tbody>';
+        snap.forEach(doc => {
+            const ing = doc.data();
+            const isLow = ing.currentStock <= ing.minStock;
+            html += `<tr class="border-b ${isLow ? 'bg-red-100' : ''}">
+                <td class="p-2">${ing.name}</td>
+                <td class="p-2">${ing.unit}</td>
+                <td class="p-2">${ing.currentStock}</td>
+                <td class="p-2">${ing.minStock}</td>
+                <td class="p-2">${formatRupiah(ing.avgBuyPrice)}</td>
+                <td class="p-2">
+                    <button onclick="showStockInModal('${doc.id}')" class="text-green-600 mr-2"><i class="fas fa-plus"></i></button>
+                    <button onclick="editIngredient('${doc.id}')" class="text-blue-600"><i class="fas fa-edit"></i></button>
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('ingredientsTable').innerHTML = html;
+    }
+
+    function showAddIngredientModal() {
+        // Load units for dropdown
+        db.collection('Owners').doc(currentOwnerId).collection('Units').get().then(snap => {
+            let unitOptions = '<option value="">Pilih Satuan</option>';
+            snap.forEach(doc => unitOptions += `<option value="${doc.data().name}">${doc.data().name}</option>`);
+            showModal(`
+                <h2 class="text-xl font-bold mb-4">Tambah Bahan</h2>
+                <input type="text" id="ingName" placeholder="Nama Bahan" class="w-full p-2 border rounded mb-3">
+                <select id="ingUnit" class="w-full p-2 border rounded mb-3">${unitOptions}</select>
+                <input type="number" id="ingStock" placeholder="Stok Awal" class="w-full p-2 border rounded mb-3">
+                <input type="number" id="ingPrice" placeholder="Harga Beli per Unit" class="w-full p-2 border rounded mb-3">
+                <input type="number" id="ingMin" placeholder="Stok Minimum" class="w-full p-2 border rounded mb-3">
+                <button onclick="saveIngredient()" class="btn-navy w-full">Simpan</button>
+            `);
+        });
+    }
+
+    async function saveIngredient() {
+        const name = document.getElementById('ingName').value;
+        const unit = document.getElementById('ingUnit').value;
+        const stock = parseFloat(document.getElementById('ingStock').value) || 0;
+        const price = parseFloat(document.getElementById('ingPrice').value) || 0;
+        const min = parseFloat(document.getElementById('ingMin').value) || 0;
+        if (!name || !unit) return alert('Isi nama dan satuan');
+        const ingRef = db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc();
+        const batch = db.batch();
+        batch.set(ingRef, {
+            name, unit, currentStock: stock, minStock: min,
+            avgBuyPrice: price, lastPurchasePrice: price,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        // If stock > 0, create expense
+        if (stock > 0) {
+            const expRef = db.collection('Owners').doc(currentOwnerId).collection('Expenses').doc();
+            batch.set(expRef, {
+                expId: expRef.id,
+                outletId: 'global',
+                category: 'Belanja Stok',
+                itemName: `Pembelian ${name}`,
+                amount: stock * price,
+                isStockPurchase: true,
+                stockDetails: { ingId: ingRef.id, addedQty: stock, purchasePricePerUnit: price },
+                inputBy: 'owner',
+                inputById: currentOwnerId,
+                notes: 'Stok awal',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        await batch.commit();
+        alert('Bahan ditambahkan');
+        closeModal();
+        loadIngredients();
+    }
+
+    function showStockInModal(ingId) {
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Stok</h2>
+            <input type="number" id="stockQty" placeholder="Jumlah" class="w-full p-2 border rounded mb-3">
+            <input type="number" id="stockPrice" placeholder="Harga per unit" class="w-full p-2 border rounded mb-3">
+            <input type="text" id="stockNotes" placeholder="Catatan" class="w-full p-2 border rounded mb-3">
+            <button onclick="processStockIn('${ingId}')" class="btn-navy w-full">Simpan</button>
+        `);
+    }
+
+    async function processStockIn(ingId) {
+        const qty = parseFloat(document.getElementById('stockQty').value);
+        const price = parseFloat(document.getElementById('stockPrice').value);
+        const notes = document.getElementById('stockNotes').value;
+        if (!qty || !price) return alert('Isi jumlah dan harga');
+        const ingRef = db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc(ingId);
+        const ingDoc = await ingRef.get();
+        const ing = ingDoc.data();
+        const currentStock = ing.currentStock;
+        const avgPrice = ing.avgBuyPrice || 0;
+        const newAvgPrice = ((currentStock * avgPrice) + (qty * price)) / (currentStock + qty);
+        const batch = db.batch();
+        batch.update(ingRef, {
+            currentStock: currentStock + qty,
+            avgBuyPrice: newAvgPrice,
+            lastPurchasePrice: price,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        const expRef = db.collection('Owners').doc(currentOwnerId).collection('Expenses').doc();
+        batch.set(expRef, {
+            expId: expRef.id,
+            outletId: 'global',
+            category: 'Belanja Stok',
+            itemName: `Pembelian ${ing.name}`,
+            amount: qty * price,
+            isStockPurchase: true,
+            stockDetails: { ingId, addedQty: qty, purchasePricePerUnit: price },
+            inputBy: 'owner',
+            inputById: currentOwnerId,
+            notes,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await batch.commit();
+        alert('Stok berhasil ditambahkan');
+        closeModal();
+        loadIngredients();
+        loadStockLimit(); // refresh dashboard if needed
+    }
+
+    function editIngredient(id) {
+        alert('Edit bahan');
+    }
+
+    // ==================== PENGELUARAN & TEMPLATE ====================
+    function renderExpenses() {
+        pageContent.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Pengeluaran</h1>
+                <button onclick="showAddExpenseModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah</button>
+            </div>
+            <div class="mb-4">
+                <button onclick="renderTemplates()" class="btn-outline-navy">Kelola Template</button>
+            </div>
+            <div id="expensesList"></div>
+        `;
+        loadExpensesList();
+    }
+
+    async function loadExpensesList() {
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Expenses').orderBy('timestamp', 'desc').limit(50).get();
+        let html = '<table class="w-full"><thead><tr class="bg-gray-100"><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Nominal</th><th>Tipe</th><th>Aksi</th></tr></thead><tbody>';
+        snap.forEach(doc => {
+            const exp = doc.data();
+            const tgl = exp.timestamp ? new Date(exp.timestamp.seconds * 1000).toLocaleDateString('id-ID') : '-';
+            html += `<tr class="border-b">
+                <td class="p-2">${tgl}</td>
+                <td class="p-2">${exp.category}</td>
+                <td class="p-2">${exp.itemName}</td>
+                <td class="p-2">${formatRupiah(exp.amount)}</td>
+                <td class="p-2">${exp.isStockPurchase ? 'Aset' : 'Beban'}</td>
+                <td class="p-2"><button onclick="deleteExpense('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('expensesList').innerHTML = html;
+    }
+
+    function showAddExpenseModal() {
+        // Load templates
+        db.collection('Owners').doc(currentOwnerId).collection('Templates').get().then(snap => {
+            let templateOptions = '<option value="">Manual</option>';
+            snap.forEach(doc => templateOptions += `<option value="${doc.id}" data-cat="${doc.data().category}" data-amount="${doc.data().defaultAmount || 0}">${doc.data().name}</option>`);
+            showModal(`
+                <h2 class="text-xl font-bold mb-4">Tambah Pengeluaran</h2>
+                <select id="expTemplate" class="w-full p-2 border rounded mb-3">
+                    ${templateOptions}
+                </select>
+                <input type="text" id="expCategory" placeholder="Kategori" class="w-full p-2 border rounded mb-3">
+                <input type="text" id="expItem" placeholder="Keterangan" class="w-full p-2 border rounded mb-3">
+                <input type="number" id="expAmount" placeholder="Nominal" class="w-full p-2 border rounded mb-3">
+                <div class="mb-3">
+                    <label class="inline-flex items-center"><input type="radio" name="expType" value="false" checked> Beban (Operasional)</label>
+                    <label class="inline-flex items-center ml-4"><input type="radio" name="expType" value="true"> Aset (Stok)</label>
+                </div>
+                <button onclick="saveExpense()" class="btn-navy w-full">Simpan</button>
+            `);
+            // Handle template selection
+            document.getElementById('expTemplate').addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex];
+                if (selected.value) {
+                    document.getElementById('expCategory').value = selected.dataset.cat || '';
+                    document.getElementById('expAmount').value = selected.dataset.amount || '';
+                }
+            });
+        });
+    }
+
+    async function saveExpense() {
+        const template = document.getElementById('expTemplate').value;
+        const category = document.getElementById('expCategory').value;
+        const itemName = document.getElementById('expItem').value;
+        const amount = parseFloat(document.getElementById('expAmount').value);
+        const isStockPurchase = document.querySelector('input[name="expType"]:checked').value === 'true';
+        if (!category || !itemName || !amount) return alert('Isi semua field');
+        await db.collection('Owners').doc(currentOwnerId).collection('Expenses').add({
+            outletId: 'global',
+            category, itemName, amount, isStockPurchase,
+            inputBy: 'owner',
+            inputById: currentOwnerId,
+            notes: '',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Pengeluaran dicatat');
+        closeModal();
+        loadExpensesList();
+    }
+
+    function deleteExpense(id) {
+        if (confirm('Hapus pengeluaran ini?')) {
+            db.collection('Owners').doc(currentOwnerId).collection('Expenses').doc(id).delete();
+            loadExpensesList();
+        }
+    }
+
+    function renderTemplates() {
+        pageContent.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Template Pengeluaran</h1>
+                <button onclick="showAddTemplateModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah</button>
+            </div>
+            <div id="templatesList"></div>
+        `;
+        loadTemplates();
+    }
+
+    async function loadTemplates() {
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Templates').get();
+        let html = '<table class="w-full"><thead><tr class="bg-gray-100"><th>Nama</th><th>Tipe</th><th>Kategori</th><th>Default</th><th>Aksi</th></tr></thead><tbody>';
+        snap.forEach(doc => {
+            const t = doc.data();
+            html += `<tr class="border-b">
+                <td class="p-2">${t.name}</td>
+                <td class="p-2">${t.type}</td>
+                <td class="p-2">${t.category}</td>
+                <td class="p-2">${formatRupiah(t.defaultAmount || 0)}</td>
+                <td class="p-2"><button onclick="deleteTemplate('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('templatesList').innerHTML = html;
+    }
+
+    function showAddTemplateModal() {
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Template</h2>
+            <input type="text" id="tempName" placeholder="Nama Template" class="w-full p-2 border rounded mb-3">
+            <select id="tempType" class="w-full p-2 border rounded mb-3">
+                <option value="owner">Owner</option>
+                <option value="kasir">Kasir</option>
+            </select>
+            <input type="text" id="tempCategory" placeholder="Kategori (misal: Fix Cost)" class="w-full p-2 border rounded mb-3">
+            <input type="number" id="tempAmount" placeholder="Nominal Default" class="w-full p-2 border rounded mb-3">
+            <button onclick="saveTemplate()" class="btn-navy w-full">Simpan</button>
+        `);
+    }
+
+    async function saveTemplate() {
+        const name = document.getElementById('tempName').value;
+        const type = document.getElementById('tempType').value;
+        const category = document.getElementById('tempCategory').value;
+        const amount = parseFloat(document.getElementById('tempAmount').value) || 0;
+        if (!name || !type || !category) return alert('Isi semua field');
+        await db.collection('Owners').doc(currentOwnerId).collection('Templates').add({
+            name, type, category, defaultAmount: amount, isActive: true
+        });
+        alert('Template ditambahkan');
+        closeModal();
+        loadTemplates();
+    }
+
+    function deleteTemplate(id) {
+        if (confirm('Hapus template?')) {
+            db.collection('Owners').doc(currentOwnerId).collection('Templates').doc(id).delete();
+            loadTemplates();
+        }
+    }
+
+    // ==================== LAPORAN ====================
+    function renderReports() {
+        pageContent.innerHTML = `
+            <h1 class="text-2xl font-bold mb-4">Laporan</h1>
+            <div class="mb-4 flex flex-wrap gap-2">
+                <select id="reportPeriod" class="p-2 border rounded">
+                    <option value="today">Hari ini</option>
+                    <option value="yesterday">Kemarin</option>
+                    <option value="week">7 hari</option>
+                    <option value="month">Bulan ini</option>
+                    <option value="custom">Kustom</option>
+                </select>
+                <input type="date" id="startDate" class="p-2 border rounded hidden">
+                <input type="date" id="endDate" class="p-2 border rounded hidden">
+                <button onclick="exportExcel()" class="btn-navy"><i class="fas fa-file-excel"></i> Excel</button>
+                <button onclick="exportJPEG()" class="btn-outline-navy"><i class="fas fa-image"></i> JPEG</button>
+            </div>
+            <div id="reportSummary" class="bg-white p-4 rounded-lg shadow">
+                <p>Pilih periode dan klik ekspor.</p>
+            </div>
+        `;
+        document.getElementById('reportPeriod').addEventListener('change', function() {
+            const custom = this.value === 'custom';
+            document.getElementById('startDate').classList.toggle('hidden', !custom);
+            document.getElementById('endDate').classList.toggle('hidden', !custom);
+        });
+    }
+
+    async function exportExcel() {
+        const period = document.getElementById('reportPeriod').value;
+        let start, end;
+        const now = new Date();
+        if (period === 'today') {
+            start = new Date(now.setHours(0,0,0,0));
+            end = new Date(now.setHours(23,59,59,999));
+        } else if (period === 'yesterday') {
+            start = new Date(now.setDate(now.getDate()-1)); start.setHours(0,0,0,0);
+            end = new Date(now.setHours(23,59,59,999));
+        } else if (period === 'week') {
+            start = new Date(now.setDate(now.getDate()-7)); start.setHours(0,0,0,0);
+            end = new Date();
+        } else if (period === 'month') {
+            start = new Date(now.getFullYear(), now.getMonth(), 1);
+            end = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59);
+        } else if (period === 'custom') {
+            start = new Date(document.getElementById('startDate').value);
+            end = new Date(document.getElementById('endDate').value);
+            end.setHours(23,59,59);
+        }
+        // Ambil data transaksi
+        const transSnap = await db.collection('Owners').doc(currentOwnerId).collection('Transactions')
+            .where('timestamp', '>=', start).where('timestamp', '<=', end).get();
+        const expensesSnap = await db.collection('Owners').doc(currentOwnerId).collection('Expenses')
+            .where('timestamp', '>=', start).where('timestamp', '<=', end).get();
+        const ingredientsSnap = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').get();
+
+        // Buat workbook
+        const wb = XLSX.utils.book_new();
+
+        // Sheet Ringkasan Laba Rugi
+        let totalPenjualan = 0, totalHPP = 0, totalExpense = 0;
+        transSnap.forEach(doc => {
+            const data = doc.data();
+            if (!data.isVoid) {
+                totalPenjualan += data.totalPayment || 0;
+                totalHPP += data.totalHpp || 0;
+            }
+        });
+        expensesSnap.forEach(doc => {
+            const data = doc.data();
+            if (!data.isStockPurchase) totalExpense += data.amount || 0;
+        });
+        const labaKotor = totalPenjualan - totalHPP;
+        const labaBersih = labaKotor - totalExpense;
+        const sheetRingkasan = XLSX.utils.aoa_to_sheet([
+            ['Ringkasan Laba Rugi'],
+            ['Deskripsi', 'Nilai'],
+            ['Total Penjualan', totalPenjualan],
+            ['Total HPP Terjual', totalHPP],
+            ['Laba Kotor', labaKotor],
+            ['Total Pengeluaran', totalExpense],
+            ['Laba Bersih', labaBersih]
+        ]);
+        XLSX.utils.book_append_sheet(wb, sheetRingkasan, 'Ringkasan');
+
+        // Sheet Detail Transaksi
+        const transData = [['No Invoice', 'Tanggal', 'Jam', 'Kasir', 'Item', 'Qty', 'Harga', 'Total', 'HPP', 'Profit']];
+        transSnap.forEach(doc => {
+            const t = doc.data();
+            const tgl = t.timestamp ? new Date(t.timestamp.seconds*1000).toLocaleDateString('id-ID') : '';
+            const jam = t.timestamp ? new Date(t.timestamp.seconds*1000).toLocaleTimeString('id-ID') : '';
+            t.items.forEach(item => {
+                transData.push([
+                    t.invoiceNo, tgl, jam, t.cashierName, item.name, item.qty,
+                    item.price, item.subtotal, item.hppAtTime, item.subtotal - (item.hppAtTime * item.qty)
+                ]);
+            });
+        });
+        const sheetTrans = XLSX.utils.aoa_to_sheet(transData);
+        XLSX.utils.book_append_sheet(wb, sheetTrans, 'Transaksi');
+
+        // Sheet Pengeluaran
+        const expData = [['Tanggal', 'Kategori', 'Keterangan', 'Nominal', 'Tipe']];
+        expensesSnap.forEach(doc => {
+            const e = doc.data();
+            const tgl = e.timestamp ? new Date(e.timestamp.seconds*1000).toLocaleDateString('id-ID') : '';
+            expData.push([tgl, e.category, e.itemName, e.amount, e.isStockPurchase ? 'Aset' : 'Beban']);
+        });
+        const sheetExp = XLSX.utils.aoa_to_sheet(expData);
+        XLSX.utils.book_append_sheet(wb, sheetExp, 'Pengeluaran');
+
+        // Sheet Stok
+        const stokData = [['Nama Bahan', 'Satuan', 'Stok Akhir', 'Min Stok']];
+        ingredientsSnap.forEach(doc => {
+            const i = doc.data();
+            stokData.push([i.name, i.unit, i.currentStock, i.minStock]);
+        });
+        const sheetStok = XLSX.utils.aoa_to_sheet(stokData);
+        XLSX.utils.book_append_sheet(wb, sheetStok, 'Stok');
+
+        // Sheet Menu Terjual
+        const menuCount = {};
+        transSnap.forEach(doc => {
+            const t = doc.data();
+            if (!t.isVoid) {
+                t.items.forEach(item => {
+                    const key = item.name;
+                    if (!menuCount[key]) menuCount[key] = { qty:0, omzet:0, hpp:0 };
+                    menuCount[key].qty += item.qty;
+                    menuCount[key].omzet += item.subtotal;
+                    menuCount[key].hpp += (item.hppAtTime * item.qty);
+                });
+            }
+        });
+        const menuData = [['Nama Menu', 'Qty Terjual', 'Omzet', 'HPP', 'Profit']];
+        Object.entries(menuCount).forEach(([name, val]) => {
+            menuData.push([name, val.qty, val.omzet, val.hpp, val.omzet - val.hpp]);
+        });
+        const sheetMenu = XLSX.utils.aoa_to_sheet(menuData);
+        XLSX.utils.book_append_sheet(wb, sheetMenu, 'Menu Terjual');
+
+        // Export
+        XLSX.writeFile(wb, `laporan_${start.toISOString().slice(0,10)}.xlsx`);
+    }
+
+    async function exportJPEG() {
+        const summaryDiv = document.getElementById('reportSummary');
+        summaryDiv.innerHTML = '<p>Mengambil data...</p>';
+        // Sederhana: ambil ringkasan dari dashboard
+        const income = incomeToday, expense = expenseToday, profit = profitToday, voidCount = voidToday;
+        summaryDiv.innerHTML = `
+            <h2 class="font-bold text-lg">Ringkasan Keuangan</h2>
+            <p>Pemasukan: ${formatRupiah(income)}</p>
+            <p>Pengeluaran: ${formatRupiah(expense)}</p>
+            <p>Profit: ${formatRupiah(profit)}</p>
+            <p>Void: ${voidCount}</p>
+        `;
+        html2canvas(summaryDiv).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'ringkasan.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+
+    // ==================== PROFIL ====================
+    function renderProfile() {
+        pageContent.innerHTML = `
+            <h1 class="text-2xl font-bold mb-4">Profil</h1>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="mb-4">
+                    <label class="block mb-1">Nama</label>
+                    <input type="text" id="profileName" class="w-full p-2 border rounded">
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1">Email</label>
+                    <input type="email" id="profileEmail" class="w-full p-2 border rounded" disabled>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1">Nomor WA</label>
+                    <input type="tel" id="profilePhone" class="w-full p-2 border rounded">
+                </div>
+                <button onclick="updateProfile()" class="btn-navy w-full mb-4">Simpan Profil</button>
+                <hr class="my-4">
+                <h2 class="font-bold mb-2">Pengaturan Nota</h2>
+                <div class="mb-4">
+                    <label class="block mb-1">Ukuran Logo</label>
+                    <select id="logoSize" class="w-full p-2 border rounded">
+                        <option value="small">Kecil</option>
+                        <option value="medium">Sedang</option>
+                        <option value="large">Besar</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1">Teks Footer</label>
+                    <input type="text" id="footerText" class="w-full p-2 border rounded">
+                </div>
+                <button onclick="updateReceiptSettings()" class="btn-navy w-full mb-4">Simpan Setting Nota</button>
+                <button onclick="logout()" class="btn-outline-navy w-full">Logout</button>
+            </div>
+        `;
+        loadProfile();
+    }
+
+    async function loadProfile() {
+        if (!currentUser) return;
+        document.getElementById('profileEmail').value = currentUser.email;
+        const doc = await db.collection('Master_Owners').doc(currentOwnerId).get();
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('profileName').value = data.name || '';
+            document.getElementById('profilePhone').value = data.phone || '';
+        }
+        const settingsDoc = await db.collection('Owners').doc(currentOwnerId).collection('Settings').doc('receipt').get();
+        if (settingsDoc.exists) {
+            const s = settingsDoc.data();
+            document.getElementById('logoSize').value = s.logoSize || 'medium';
+            document.getElementById('footerText').value = s.footerText || '';
+        }
+    }
+
+    async function updateProfile() {
+        const name = document.getElementById('profileName').value;
+        const phone = document.getElementById('profilePhone').value;
+        await db.collection('Master_Owners').doc(currentOwnerId).update({ name, phone });
+        alert('Profil diperbarui');
+    }
+
+    async function updateReceiptSettings() {
+        const logoSize = document.getElementById('logoSize').value;
+        const footerText = document.getElementById('footerText').value;
+        await db.collection('Owners').doc(currentOwnerId).collection('Settings').doc('receipt').set({
+            logoSize, footerText, watermark: true, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        alert('Setting nota disimpan');
+    }
+
+    function logout() {
+        auth.signOut();
+    }
+
+    // ==================== UTILS ====================
+    function formatRupiah(angka) {
+        return 'Rp ' + angka.toLocaleString('id-ID');
+    }
+
+    function showModal(html) {
+        const modal = document.getElementById('modalContainer');
+        modal.innerHTML = `<div class="modal-overlay" onclick="closeModal(event)"><div class="modal-card" onclick="event.stopPropagation()">${html}</div></div>`;
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal(e) {
+        if (e && e.target.classList.contains('modal-overlay')) {
+            document.getElementById('modalContainer').classList.add('hidden');
+        } else {
+            document.getElementById('modalContainer').classList.add('hidden');
+        }
+    }
+
+    // ==================== AUTH TABS ====================
+    document.getElementById('tabLogin').addEventListener('click', () => {
+        document.getElementById('tabLogin').classList.add('border-b-2', 'border-navy-800');
+        document.getElementById('tabRegister').classList.remove('border-b-2', 'border-navy-800');
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+    });
+    document.getElementById('tabRegister').addEventListener('click', () => {
+        document.getElementById('tabRegister').classList.add('border-b-2', 'border-navy-800');
+        document.getElementById('tabLogin').classList.remove('border-b-2', 'border-navy-800');
+        document.getElementById('registerForm').classList.remove('hidden');
+        document.getElementById('loginForm').classList.add('hidden');
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+        } catch (e) {
+            alert('Login gagal: ' + e.message);
+        }
+    });
+
+    document.getElementById('registerBtn').addEventListener('click', async () => {
+        const name = document.getElementById('regName').value;
+        const email = document.getElementById('regEmail').value;
+        const phone = document.getElementById('regPhone').value;
+        const password = document.getElementById('regPassword').value;
+        const confirm = document.getElementById('regConfirmPassword').value;
+        if (password !== confirm) return alert('Password tidak cocok');
+        try {
+            const cred = await auth.createUserWithEmailAndPassword(email, password);
+            const user = cred.user;
+            await db.collection('Master_Owners').doc(user.uid).set({
+                ownerId: user.uid,
+                email,
+                name,
+                phone,
+                status: 'pending',
+                registeredAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert('Registrasi berhasil, menunggu aktivasi developer');
+        } catch (e) {
+            alert('Registrasi gagal: ' + e.message);
+        }
+    });
+
+    function resetPassword() {
+        const email = prompt('Masukkan email Anda');
+        if (email) auth.sendPasswordResetEmail(email).then(() => alert('Email reset telah dikirim'));
+    }
+</script>
 </body>
 </html>
