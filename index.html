@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HeiKasir - Owner</title>
-    <!-- Tailwind CSS -->
+    <title>HeiKasir - Owner Dashboard</title>
+    <!-- Tailwind CSS + Font Awesome -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK (compat) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
@@ -17,81 +18,147 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; padding: 0.5rem 0; z-index: 50; overflow-x: auto; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #4a5568; font-size: 0.7rem; cursor: pointer; min-width: 60px; }
-        .nav-item.active { color: #001f3f; font-weight: 600; }
-        .content { padding-bottom: 5rem; }
-        .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .modal-card { background: white; border-radius: 1rem; padding: 1.5rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
-        .lock-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
-        .btn-navy { background-color: #001f3f; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: 0.2s; }
-        .btn-navy:hover { background-color: #003366; }
-        .btn-outline-navy { border: 1px solid #001f3f; color: #001f3f; padding: 0.5rem 1rem; border-radius: 0.5rem; }
-        .btn-outline-navy:hover { background-color: #e6f0ff; }
-        .tab { display: inline-block; padding: 0.5rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; }
-        .tab.active { border-bottom-color: #001f3f; font-weight: 600; }
-        .hidden { display: none; }
+        /* Custom styling */
+        .bottom-nav {
+            backdrop-filter: blur(8px);
+            background-color: rgba(255,255,255,0.9);
+            border-top: 1px solid #e5e7eb;
+        }
+        .dark .bottom-nav {
+            background-color: rgba(31,41,55,0.9);
+            border-top-color: #374151;
+        }
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+        .modal-overlay {
+            transition: opacity 0.2s;
+        }
+        .spinner {
+            border: 3px solid rgba(0,31,63,0.2);
+            border-top: 3px solid #001f3f;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .tab {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            border-bottom-color: #001f3f;
+            font-weight: 600;
+        }
+        .dark .tab.active {
+            border-bottom-color: #60a5fa;
+        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans antialiased">
 
 <!-- Overlay Lisensi -->
-<div id="lockOverlay" class="lock-overlay hidden">
-    <i class="fas fa-lock text-6xl text-navy-800 mb-4"></i>
+<div id="lockOverlay" class="hidden fixed inset-0 bg-white dark:bg-gray-900 bg-opacity-95 z-50 flex flex-col items-center justify-center">
+    <i class="fas fa-lock text-6xl text-navy-800 dark:text-navy-400 mb-4"></i>
     <h2 class="text-2xl font-bold mb-2">Akses Terkunci</h2>
-    <p id="lockMessage" class="text-gray-600 mb-4">Lisensi tidak aktif</p>
-    <button onclick="window.location.reload()" class="btn-navy">Coba Lagi</button>
+    <p id="lockMessage" class="text-gray-600 dark:text-gray-400 mb-4">Lisensi tidak aktif</p>
+    <button onclick="window.location.reload()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg">Coba Lagi</button>
 </div>
 
 <!-- Modal Container -->
-<div id="modalContainer" class="hidden"></div>
+<div id="modalContainer" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-overlay">
+    <div id="modalContent" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6"></div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="hidden fixed inset-0 bg-white dark:bg-gray-900 bg-opacity-80 z-50 flex items-center justify-center">
+    <div class="spinner"></div>
+</div>
+
+<!-- Dark Mode Toggle (optional) -->
+<div class="fixed top-4 right-4 z-50">
+    <button id="darkModeToggle" class="bg-gray-200 dark:bg-gray-700 p-2 rounded-full">
+        <i class="fas fa-moon dark:hidden"></i>
+        <i class="fas fa-sun hidden dark:inline"></i>
+    </button>
+</div>
 
 <!-- Konten Utama (setelah login & lisensi aktif) -->
-<div id="appContent" class="hidden">
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav" id="bottomNav">
-        <div class="nav-item active" data-page="dashboard"><i class="fas fa-home"></i><span>Beranda</span></div>
-        <div class="nav-item" data-page="outlets"><i class="fas fa-store"></i><span>Outlet</span></div>
-        <div class="nav-item" data-page="employees"><i class="fas fa-users"></i><span>Pegawai</span></div>
-        <div class="nav-item" data-page="menu"><i class="fas fa-utensils"></i><span>Menu</span></div>
-        <div class="nav-item" data-page="stock"><i class="fas fa-boxes"></i><span>Stok</span></div>
-        <div class="nav-item" data-page="expenses"><i class="fas fa-money-bill"></i><span>Pengeluaran</span></div>
-        <div class="nav-item" data-page="reports"><i class="fas fa-chart-bar"></i><span>Laporan</span></div>
-        <div class="nav-item" data-page="profile"><i class="fas fa-user"></i><span>Profil</span></div>
+<div id="appContent" class="hidden min-h-screen pb-20">
+    <!-- Header -->
+    <nav class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-navy-800 dark:text-white">HeiKasir Owner</span>
+                </div>
+                <div class="hidden md:flex space-x-2">
+                    <button class="nav-btn px-3 py-2 rounded-md text-sm font-medium" data-page="dashboard">Dashboard</button>
+                    <button class="nav-btn px-3 py-2 rounded-md text-sm font-medium" data-page="outlets">Outlet</button>
+                    <button class="nav-btn px-3 py-2 rounded-md text-sm font-medium" data-page="employees">Pegawai</button>
+                    <button class="nav-btn px-3 py-2 rounded-md text-sm font-medium" data-page="menu">Menu</button>
+                    <button class="nav-btn px-3 py-2 rounded-md text-sm font-medium" data-page="stock">Stok</button>
+                    <button class="nav-btn px-3 py-2 rounded-md text-sm font-medium" data-page="expenses">Pengeluaran</button>
+                    <button class="nav-btn px-3 py-2 rounded-md text-sm font-medium" data-page="reports">Laporan</button>
+                    <button class="nav-btn px-3 py-2 rounded-md text-sm font-medium" data-page="profile">Profil</button>
+                </div>
+                <button id="logoutBtn" class="text-sm text-red-600 hover:text-red-800 dark:text-red-400">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Bottom Navigation untuk mobile -->
+    <div class="bottom-nav fixed bottom-0 left-0 right-0 md:hidden flex justify-around p-2 z-50">
+        <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="dashboard"><i class="fas fa-home text-xl mb-1"></i><span>Home</span></button>
+        <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="outlets"><i class="fas fa-store text-xl mb-1"></i><span>Outlet</span></button>
+        <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="employees"><i class="fas fa-users text-xl mb-1"></i><span>Pegawai</span></button>
+        <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="menu"><i class="fas fa-utensils text-xl mb-1"></i><span>Menu</span></button>
+        <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="stock"><i class="fas fa-boxes text-xl mb-1"></i><span>Stok</span></button>
+        <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="expenses"><i class="fas fa-money-bill text-xl mb-1"></i><span>Biaya</span></button>
+        <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="reports"><i class="fas fa-chart-bar text-xl mb-1"></i><span>Laporan</span></button>
+        <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="profile"><i class="fas fa-user text-xl mb-1"></i><span>Profil</span></button>
     </div>
-    <!-- Halaman konten -->
-    <div id="pageContent" class="content p-4"></div>
+
+    <!-- Halaman konten dinamis -->
+    <main id="pageContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"></main>
 </div>
 
 <!-- Halaman Login/Registrasi -->
-<div id="authContainer" class="min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
+<div id="authContainer" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-navy-900 to-blue-900">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-8">
         <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-navy-800">HeiKasir</h1>
-            <p class="text-gray-500">Owner Panel</p>
+            <h1 class="text-3xl font-bold text-navy-800 dark:text-white">HeiKasir</h1>
+            <p class="text-gray-500 dark:text-gray-400">Owner Panel</p>
         </div>
-        <div id="authTabs" class="flex mb-4 border-b">
-            <button id="tabLogin" class="flex-1 py-2 text-center font-medium border-b-2 border-navy-800">Masuk</button>
+        <div class="flex mb-4 border-b dark:border-gray-700">
+            <button id="tabLogin" class="flex-1 py-2 text-center font-medium border-b-2 border-navy-800 dark:border-navy-400">Masuk</button>
             <button id="tabRegister" class="flex-1 py-2 text-center font-medium text-gray-500">Daftar</button>
         </div>
         <!-- Form Login -->
         <div id="loginForm" class="space-y-4">
-            <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 border rounded-lg">
-            <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border rounded-lg">
-            <button id="loginBtn" class="w-full btn-navy py-3">Masuk</button>
-            <p class="text-sm text-center text-gray-500">Lupa password? <a href="#" onclick="resetPassword()" class="text-navy-800">Reset</a></p>
+            <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+            <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+            <button id="loginBtn" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-3 rounded-lg font-semibold">Masuk</button>
+            <p class="text-sm text-center text-gray-500"><a href="#" onclick="resetPassword()" class="text-navy-800 dark:text-navy-400">Lupa password?</a></p>
         </div>
         <!-- Form Registrasi -->
         <div id="registerForm" class="space-y-4 hidden">
-            <input type="text" id="regName" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg">
-            <input type="email" id="regEmail" placeholder="Email" class="w-full p-3 border rounded-lg">
-            <input type="tel" id="regPhone" placeholder="Nomor WA" class="w-full p-3 border rounded-lg">
-            <input type="password" id="regPassword" placeholder="Password (min. 6 karakter)" class="w-full p-3 border rounded-lg">
-            <input type="password" id="regConfirmPassword" placeholder="Konfirmasi Password" class="w-full p-3 border rounded-lg">
-            <button id="registerBtn" class="w-full btn-navy py-3">Daftar</button>
+            <input type="text" id="regName" placeholder="Nama Lengkap" class="w-full p-3 border dark:border-gray-600 rounded-lg">
+            <input type="email" id="regEmail" placeholder="Email" class="w-full p-3 border dark:border-gray-600 rounded-lg">
+            <input type="tel" id="regPhone" placeholder="Nomor WA" class="w-full p-3 border dark:border-gray-600 rounded-lg">
+            <input type="password" id="regPassword" placeholder="Password (min. 6)" class="w-full p-3 border dark:border-gray-600 rounded-lg">
+            <input type="password" id="regConfirm" placeholder="Konfirmasi Password" class="w-full p-3 border dark:border-gray-600 rounded-lg">
+            <button id="registerBtn" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-3 rounded-lg font-semibold">Daftar</button>
         </div>
     </div>
 </div>
@@ -114,14 +181,49 @@
     // ==================== STATE GLOBAL ====================
     let currentUser = null;
     let currentOwnerId = null;
-    let licenseData = null;
     let currentPage = 'dashboard';
+    let incomeChart = null;
 
+    // Elemen DOM
     const authContainer = document.getElementById('authContainer');
     const appContent = document.getElementById('appContent');
     const lockOverlay = document.getElementById('lockOverlay');
     const lockMessage = document.getElementById('lockMessage');
     const pageContent = document.getElementById('pageContent');
+    const modalContainer = document.getElementById('modalContainer');
+    const modalContent = document.getElementById('modalContent');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    // ==================== UTILITY ====================
+    function showLoading() { loadingOverlay.classList.remove('hidden'); }
+    function hideLoading() { loadingOverlay.classList.add('hidden'); }
+    function showModal(html) { modalContent.innerHTML = html; modalContainer.classList.remove('hidden'); }
+    function closeModal() { modalContainer.classList.add('hidden'); }
+    modalContainer.addEventListener('click', (e) => { if (e.target === modalContainer) closeModal(); });
+
+    function formatRupiah(angka) {
+        return 'Rp ' + angka.toLocaleString('id-ID');
+    }
+    function formatDate(timestamp) {
+        if (!timestamp) return '-';
+        const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    function formatDateTime(timestamp) {
+        if (!timestamp) return '-';
+        const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    // ==================== DARK MODE ====================
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
+    darkModeToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+    });
 
     // ==================== AUTH LISTENER ====================
     auth.onAuthStateChanged(async (user) => {
@@ -132,6 +234,7 @@
             if (valid) {
                 authContainer.classList.add('hidden');
                 appContent.classList.remove('hidden');
+                setActiveNav(currentPage);
                 loadPage(currentPage);
             } else {
                 authContainer.classList.add('hidden');
@@ -175,65 +278,86 @@
     }
 
     // ==================== NAVIGASI ====================
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            item.classList.add('active');
-            currentPage = item.dataset.page;
-            loadPage(currentPage);
+    document.querySelectorAll('.nav-btn, .nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const page = btn.dataset.page;
+            if (!page) return;
+            currentPage = page;
+            setActiveNav(page);
+            loadPage(page);
         });
     });
+    function setActiveNav(page) {
+        document.querySelectorAll('.nav-btn, .nav-item').forEach(el => {
+            el.classList.remove('bg-navy-100', 'text-navy-800', 'dark:bg-gray-700', 'dark:text-white');
+        });
+        document.querySelectorAll(`[data-page="${page}"]`).forEach(el => {
+            el.classList.add('bg-navy-100', 'text-navy-800', 'dark:bg-gray-700', 'dark:text-white');
+        });
+    }
 
-    function loadPage(page) {
-        switch(page) {
-            case 'dashboard': renderDashboard(); break;
-            case 'outlets': renderOutlets(); break;
-            case 'employees': renderEmployees(); break;
-            case 'menu': renderMenu(); break;
-            case 'stock': renderStock(); break;
-            case 'expenses': renderExpenses(); break;
-            case 'reports': renderReports(); break;
-            case 'profile': renderProfile(); break;
-            default: renderDashboard();
+    async function loadPage(page) {
+        showLoading();
+        try {
+            switch(page) {
+                case 'dashboard': await renderDashboard(); break;
+                case 'outlets': await renderOutlets(); break;
+                case 'employees': await renderEmployees(); break;
+                case 'menu': await renderMenu(); break;
+                case 'stock': await renderStock(); break;
+                case 'expenses': await renderExpenses(); break;
+                case 'reports': await renderReports(); break;
+                case 'profile': await renderProfile(); break;
+                default: await renderDashboard();
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Gagal memuat halaman: ' + error.message);
+        } finally {
+            hideLoading();
         }
     }
 
     // ==================== DASHBOARD ====================
     let incomeToday = 0, expenseToday = 0, profitToday = 0, voidToday = 0;
-    let incomeChart;
+    let unsubTrans = null, unsubExp = null;
 
-    function renderDashboard() {
+    async function renderDashboard() {
+        // Bersihkan listener sebelumnya
+        if (unsubTrans) unsubTrans();
+        if (unsubExp) unsubExp();
+
         pageContent.innerHTML = `
-            <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
+            <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white p-4 rounded-lg shadow">
-                    <div class="flex items-center justify-between"><span class="text-gray-500">Pemasukan</span><i class="fas fa-arrow-up text-green-500"></i></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow card-hover">
+                    <div class="flex justify-between"><span class="text-gray-500">Pemasukan</span><i class="fas fa-arrow-up text-green-500"></i></div>
                     <div class="text-2xl font-bold" id="incomeToday">Rp 0</div>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow">
-                    <div class="flex items-center justify-between"><span class="text-gray-500">Pengeluaran</span><i class="fas fa-arrow-down text-red-500"></i></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow card-hover">
+                    <div class="flex justify-between"><span class="text-gray-500">Pengeluaran</span><i class="fas fa-arrow-down text-red-500"></i></div>
                     <div class="text-2xl font-bold" id="expenseToday">Rp 0</div>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow">
-                    <div class="flex items-center justify-between"><span class="text-gray-500">Profit</span><i class="fas fa-chart-line text-blue-500"></i></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow card-hover">
+                    <div class="flex justify-between"><span class="text-gray-500">Profit</span><i class="fas fa-chart-line text-blue-500"></i></div>
                     <div class="text-2xl font-bold" id="profitToday">Rp 0</div>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow">
-                    <div class="flex items-center justify-between"><span class="text-gray-500">Void</span><i class="fas fa-times text-red-500"></i></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow card-hover">
+                    <div class="flex justify-between"><span class="text-gray-500">Void</span><i class="fas fa-times text-red-500"></i></div>
                     <div class="text-2xl font-bold" id="voidToday">0</div>
                 </div>
             </div>
             <div class="grid md:grid-cols-2 gap-6 mb-6">
-                <div class="bg-white p-4 rounded-lg shadow">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
                     <h2 class="font-semibold mb-2">Perkembangan 7 Hari</h2>
                     <canvas id="incomeChart" height="200"></canvas>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
                     <h2 class="font-semibold mb-2">Menu Favorit</h2>
                     <ul id="topMenuList" class="space-y-2"></ul>
                 </div>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
                 <h2 class="font-semibold mb-2">Stok Menipis</h2>
                 <div id="stockLimitList" class="space-y-2"></div>
             </div>
@@ -242,30 +366,30 @@
         const today = new Date(); today.setHours(0,0,0,0);
         const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const transQuery = db.collection('Owners').doc(currentOwnerId).collection('Transactions')
-            .where('timestamp', '>=', today).where('timestamp', '<', tomorrow);
-        const unsubTrans = transQuery.onSnapshot(snapshot => {
-            incomeToday = 0; voidToday = 0;
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (!data.isVoid) incomeToday += data.totalPayment || 0;
-                else voidToday++;
-            });
-            updateDashboardNumbers();
-        });
-
-        const expQuery = db.collection('Owners').doc(currentOwnerId).collection('Expenses')
+        unsubTrans = db.collection('Owners').doc(currentOwnerId).collection('Transactions')
             .where('timestamp', '>=', today).where('timestamp', '<', tomorrow)
-            .where('isStockPurchase', '==', false);
-        const unsubExp = expQuery.onSnapshot(snapshot => {
-            expenseToday = 0;
-            snapshot.forEach(doc => expenseToday += doc.data().amount || 0);
-            updateDashboardNumbers();
-        });
+            .onSnapshot(snapshot => {
+                incomeToday = 0; voidToday = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (!data.isVoid) incomeToday += data.totalPayment || 0;
+                    else voidToday++;
+                });
+                updateDashboardNumbers();
+            }, error => console.error(error));
 
-        loadChartData();
-        loadTopMenu();
-        loadStockLimit();
+        unsubExp = db.collection('Owners').doc(currentOwnerId).collection('Expenses')
+            .where('timestamp', '>=', today).where('timestamp', '<', tomorrow)
+            .where('isStockPurchase', '==', false)
+            .onSnapshot(snapshot => {
+                expenseToday = 0;
+                snapshot.forEach(doc => expenseToday += doc.data().amount || 0);
+                updateDashboardNumbers();
+            }, error => console.error(error));
+
+        await loadChartData();
+        await loadTopMenu();
+        await loadStockLimit();
 
         function updateDashboardNumbers() {
             profitToday = incomeToday - expenseToday;
@@ -322,7 +446,7 @@
                 list.innerHTML += `
                     <div class="flex justify-between items-center">
                         <span>${ing.name} (${ing.currentStock} ${ing.unit})</span>
-                        <button onclick="showStockInModal('${doc.id}')" class="text-sm btn-outline-navy py-1 px-2">Stok Masuk</button>
+                        <button onclick="showStockInModal('${doc.id}')" class="text-sm bg-navy-100 hover:bg-navy-200 text-navy-800 px-3 py-1 rounded-full">Stok Masuk</button>
                     </div>
                 `;
             }
@@ -330,177 +454,218 @@
     }
 
     // ==================== OUTLET ====================
-    function renderOutlets() {
+    async function renderOutlets() {
         pageContent.innerHTML = `
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold">Outlet</h1>
-                <button onclick="showAddOutletModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah</button>
+                <button onclick="showAddOutletModal()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg flex items-center"><i class="fas fa-plus mr-2"></i>Tambah Outlet</button>
             </div>
-            <div id="outletGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="outletGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         `;
-        loadOutlets();
+        await loadOutlets();
     }
 
     async function loadOutlets() {
         const snap = await db.collection('Owners').doc(currentOwnerId).collection('Outlets').get();
         const grid = document.getElementById('outletGrid');
+        if (!grid) return;
+        if (snap.empty) {
+            grid.innerHTML = '<p class="col-span-full text-center text-gray-500">Belum ada outlet. Tambahkan outlet pertama Anda.</p>';
+            return;
+        }
         grid.innerHTML = '';
         snap.forEach(doc => {
             const outlet = doc.data();
             grid.innerHTML += `
-                <div class="bg-white p-4 rounded-lg shadow">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
                     <h3 class="font-bold">${outlet.name}</h3>
-                    <p class="text-sm text-gray-600">${outlet.address || '-'}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">${outlet.address || '-'}</p>
                     <p class="text-sm">Stok: ${outlet.stockMode == 'global' ? 'Global' : 'Lokal'}</p>
-                    <div class="flex mt-2 space-x-2">
-                        <button onclick="editOutlet('${doc.id}')" class="text-sm btn-outline-navy py-1 px-2">Edit</button>
-                        <button onclick="deleteOutlet('${doc.id}')" class="text-sm text-red-600"><i class="fas fa-trash"></i></button>
+                    <div class="flex mt-3 space-x-2">
+                        <button onclick="editOutlet('${doc.id}')" class="text-blue-600 hover:text-blue-800"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteOutlet('${doc.id}')" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `;
         });
     }
 
-    function showAddOutletModal() {
+    window.showAddOutletModal = function() {
         showModal(`
             <h2 class="text-xl font-bold mb-4">Tambah Outlet</h2>
-            <input type="text" id="outletName" placeholder="Nama Outlet" class="w-full p-2 border rounded mb-3">
-            <input type="text" id="outletAddress" placeholder="Alamat" class="w-full p-2 border rounded mb-3">
-            <input type="text" id="outletPhone" placeholder="Telepon" class="w-full p-2 border rounded mb-3">
+            <input type="text" id="outletName" placeholder="Nama Outlet" class="w-full p-2 border rounded-lg mb-3">
+            <input type="text" id="outletAddress" placeholder="Alamat" class="w-full p-2 border rounded-lg mb-3">
+            <input type="text" id="outletPhone" placeholder="Telepon" class="w-full p-2 border rounded-lg mb-3">
             <div class="mb-3">
                 <label class="block mb-1">Mode Stok</label>
                 <label class="inline-flex items-center mr-4"><input type="radio" name="stockMode" value="global" checked> Global</label>
                 <label class="inline-flex items-center"><input type="radio" name="stockMode" value="local"> Lokal</label>
             </div>
-            <button onclick="saveOutlet()" class="btn-navy w-full">Simpan</button>
+            <button onclick="saveOutlet()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
         `);
-    }
+    };
 
-    async function saveOutlet() {
-        const name = document.getElementById('outletName').value;
-        const address = document.getElementById('outletAddress').value;
-        const phone = document.getElementById('outletPhone').value;
+    window.saveOutlet = async function() {
+        const name = document.getElementById('outletName').value.trim();
+        const address = document.getElementById('outletAddress').value.trim();
+        const phone = document.getElementById('outletPhone').value.trim();
         const stockMode = document.querySelector('input[name="stockMode"]:checked').value;
         if (!name) return alert('Nama harus diisi');
-        await db.collection('Owners').doc(currentOwnerId).collection('Outlets').add({
-            name, address, phone, stockMode,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        closeModal();
-        loadOutlets();
-    }
-
-    function editOutlet(id) {
-        alert('Fitur edit outlet akan segera hadir');
-    }
-
-    function deleteOutlet(id) {
-        if (confirm('Hapus outlet ini?')) {
-            db.collection('Owners').doc(currentOwnerId).collection('Outlets').doc(id).delete();
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Outlets').add({
+                name, address, phone, stockMode,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeModal();
             loadOutlets();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-    }
+    };
+
+    window.editOutlet = function(id) {
+        alert('Fitur edit outlet akan segera hadir');
+    };
+
+    window.deleteOutlet = async function(id) {
+        if (!confirm('Hapus outlet ini?')) return;
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Outlets').doc(id).delete();
+            loadOutlets();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
 
     // ==================== PEGAWAI ====================
-    function renderEmployees() {
+    async function renderEmployees() {
         pageContent.innerHTML = `
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold">Pegawai</h1>
-                <button onclick="showAddEmployeeModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah</button>
+                <button onclick="showAddEmployeeModal()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg flex items-center"><i class="fas fa-plus mr-2"></i>Tambah Pegawai</button>
             </div>
-            <div id="employeeTable"></div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr><th class="p-3 text-left">Nama</th><th>Outlet</th><th>Role</th><th>Shift</th><th>Status</th><th>Aksi</th></tr>
+                    </thead>
+                    <tbody id="employeeTableBody"></tbody>
+                </table>
+            </div>
         `;
-        loadEmployees();
+        await loadEmployees();
     }
 
     async function loadEmployees() {
         const snap = await db.collection('Owners').doc(currentOwnerId).collection('Employees').get();
-        let html = '<table class="w-full"><thead><tr class="bg-gray-100"><th class="p-2 text-left">Nama</th><th>Outlet</th><th>Role</th><th>Shift</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
+        const tbody = document.getElementById('employeeTableBody');
+        if (!tbody) return;
+        if (snap.empty) {
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada pegawai.</td></tr>';
+            return;
+        }
+        let html = '';
         snap.forEach(doc => {
             const emp = doc.data();
-            html += `<tr class="border-b">
-                <td class="p-2">${emp.name}</td>
-                <td class="p-2">${emp.outletId}</td>
-                <td class="p-2">${emp.role}</td>
-                <td class="p-2">${emp.shift || '-'}</td>
-                <td class="p-2">${emp.isActive ? 'Aktif' : 'Nonaktif'}</td>
-                <td class="p-2">
+            html += `<tr class="border-b dark:border-gray-700">
+                <td class="p-3">${emp.name}</td>
+                <td class="p-3">${emp.outletId}</td>
+                <td class="p-3">${emp.role}</td>
+                <td class="p-3">${emp.shift || '-'}</td>
+                <td class="p-3"><span class="px-2 py-1 rounded-full text-xs ${emp.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${emp.isActive ? 'Aktif' : 'Nonaktif'}</span></td>
+                <td class="p-3">
                     <button onclick="editEmployee('${doc.id}')" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
                     <button onclick="resetPinEmployee('${doc.id}')" class="text-green-600"><i class="fas fa-key"></i></button>
                 </td>
             </tr>`;
         });
-        html += '</tbody></table>';
-        document.getElementById('employeeTable').innerHTML = html;
+        tbody.innerHTML = html;
     }
 
-    function showAddEmployeeModal() {
-        db.collection('Owners').doc(currentOwnerId).collection('Outlets').get().then(snap => {
-            let options = '';
-            snap.forEach(doc => options += `<option value="${doc.id}">${doc.data().name}</option>`);
-            showModal(`
-                <h2 class="text-xl font-bold mb-4">Tambah Pegawai</h2>
-                <input type="text" id="empName" placeholder="Nama" class="w-full p-2 border rounded mb-3">
-                <input type="text" id="empPhone" placeholder="Nomor WA" class="w-full p-2 border rounded mb-3">
-                <select id="empOutlet" class="w-full p-2 border rounded mb-3">${options}</select>
-                <select id="empRole" class="w-full p-2 border rounded mb-3">
-                    <option value="kasir">Kasir</option>
-                    <option value="head">Kepala Toko</option>
-                </select>
-                <select id="empShift" class="w-full p-2 border rounded mb-3">
-                    <option value="pagi">Pagi</option>
-                    <option value="siang">Siang</option>
-                    <option value="malam">Malam</option>
-                </select>
-                <input type="number" id="empSalary" placeholder="Gaji" class="w-full p-2 border rounded mb-3">
-                <input type="password" id="empPin" placeholder="PIN (4-6 digit)" class="w-full p-2 border rounded mb-3">
-                <input type="password" id="empPinConfirm" placeholder="Konfirmasi PIN" class="w-full p-2 border rounded mb-3">
-                <button onclick="saveEmployee()" class="btn-navy w-full">Simpan</button>
-            `);
-        });
-    }
+    window.showAddEmployeeModal = async function() {
+        const outletsSnap = await db.collection('Owners').doc(currentOwnerId).collection('Outlets').get();
+        let outletOptions = '';
+        outletsSnap.forEach(doc => outletOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Pegawai</h2>
+            <input type="text" id="empName" placeholder="Nama" class="w-full p-2 border rounded-lg mb-3">
+            <input type="text" id="empPhone" placeholder="Nomor WA" class="w-full p-2 border rounded-lg mb-3">
+            <select id="empOutlet" class="w-full p-2 border rounded-lg mb-3">${outletOptions}</select>
+            <select id="empRole" class="w-full p-2 border rounded-lg mb-3">
+                <option value="kasir">Kasir</option>
+                <option value="head">Kepala Toko</option>
+            </select>
+            <select id="empShift" class="w-full p-2 border rounded-lg mb-3">
+                <option value="pagi">Pagi</option>
+                <option value="siang">Siang</option>
+                <option value="malam">Malam</option>
+            </select>
+            <input type="number" id="empSalary" placeholder="Gaji" class="w-full p-2 border rounded-lg mb-3">
+            <input type="password" id="empPin" placeholder="PIN (4-6 digit)" class="w-full p-2 border rounded-lg mb-3">
+            <input type="password" id="empPinConfirm" placeholder="Konfirmasi PIN" class="w-full p-2 border rounded-lg mb-3">
+            <button onclick="saveEmployee()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
+        `);
+    };
 
-    async function saveEmployee() {
-        const name = document.getElementById('empName').value;
-        const phone = document.getElementById('empPhone').value;
+    window.saveEmployee = async function() {
+        const name = document.getElementById('empName').value.trim();
+        const phone = document.getElementById('empPhone').value.trim();
         const outletId = document.getElementById('empOutlet').value;
         const role = document.getElementById('empRole').value;
         const shift = document.getElementById('empShift').value;
-        const salary = parseInt(document.getElementById('empSalary').value);
+        const salary = parseFloat(document.getElementById('empSalary').value);
         const pin = document.getElementById('empPin').value;
         const pinConfirm = document.getElementById('empPinConfirm').value;
         if (!name || !pin || pin.length < 4 || pin !== pinConfirm) return alert('Data tidak valid');
-        await db.collection('Owners').doc(currentOwnerId).collection('Employees').add({
-            name, phone, outletId, role, shift, salary, pin, // plain pin (contoh)
-            isActive: true,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert('Pegawai ditambahkan');
-        closeModal();
-        loadEmployees();
-    }
-
-    function editEmployee(id) {
-        alert('Edit pegawai');
-    }
-
-    function resetPinEmployee(id) {
-        const newPin = prompt('Masukkan PIN baru (4-6 digit)');
-        if (newPin && newPin.length >= 4) {
-            db.collection('Owners').doc(currentOwnerId).collection('Employees').doc(id).update({ pin: newPin });
-            alert('PIN diperbarui');
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Employees').add({
+                name, phone, outletId, role, shift, salary, pin, // PIN plain (contoh)
+                isActive: true,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeModal();
+            loadEmployees();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-    }
+    };
 
-    // ==================== MENU ====================
-    function renderMenu() {
+    window.editEmployee = function(id) {
+        alert('Edit pegawai');
+    };
+
+    window.resetPinEmployee = async function(id) {
+        const newPin = prompt('Masukkan PIN baru (4-6 digit)');
+        if (!newPin || newPin.length < 4) return;
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Employees').doc(id).update({ pin: newPin });
+            alert('PIN diperbarui');
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
+
+    // ==================== MENU (dengan kategori, satuan, varian) ====================
+    async function renderMenu() {
         pageContent.innerHTML = `
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold">Menu</h1>
                 <div>
-                    <button onclick="showAddMenuModal()" class="btn-navy mr-2"><i class="fas fa-plus"></i> Menu</button>
-                    <button onclick="syncHpp()" class="btn-outline-navy">Sync HPP</button>
+                    <button onclick="showAddMenuModal()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg mr-2"><i class="fas fa-plus mr-2"></i>Menu</button>
+                    <button onclick="syncHpp()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg"><i class="fas fa-sync mr-2"></i>Sync HPP</button>
                 </div>
             </div>
             <div class="border-b mb-4">
@@ -522,7 +687,7 @@
                 else if (tabName === 'variants') loadVariants();
             });
         });
-        loadMenuList();
+        await loadMenuList();
     }
 
     async function loadMenuList() {
@@ -531,11 +696,11 @@
         snap.forEach(doc => {
             const menu = doc.data();
             html += `
-                <div class="bg-white p-2 rounded-lg shadow">
+                <div class="bg-white dark:bg-gray-800 p-2 rounded-lg shadow">
                     <img src="${menu.imageUrl || 'https://via.placeholder.com/150'}" class="w-full h-24 object-cover rounded">
                     <h3 class="font-bold mt-1">${menu.name}</h3>
-                    <p class="text-sm">Rp ${menu.prices?.tunai || 0}</p>
-                    <p class="text-xs text-gray-500">HPP: Rp ${menu.calculatedHpp || 0}</p>
+                    <p class="text-sm">${formatRupiah(menu.prices?.tunai || 0)}</p>
+                    <p class="text-xs text-gray-500">HPP: ${formatRupiah(menu.calculatedHpp || 0)}</p>
                     <div class="flex mt-1">
                         <button onclick="editMenu('${doc.id}')" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
                         <button onclick="toggleMenuActive('${doc.id}', ${!menu.isActive})" class="text-${menu.isActive ? 'red' : 'green'}-600"><i class="fas ${menu.isActive ? 'fa-ban' : 'fa-check'}"></i></button>
@@ -549,180 +714,218 @@
 
     async function loadCategories() {
         const snap = await db.collection('Owners').doc(currentOwnerId).collection('Categories').get();
-        let html = '<div class="mb-4"><button onclick="showAddCategoryModal()" class="btn-navy">Tambah Kategori</button></div>';
-        html += '<ul>';
+        let html = '<div class="mb-4"><button onclick="showAddCategoryModal()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg">Tambah Kategori</button></div>';
+        html += '<ul class="bg-white dark:bg-gray-800 rounded-lg shadow divide-y dark:divide-gray-700">';
         snap.forEach(doc => {
             const cat = doc.data();
-            html += `<li class="flex justify-between items-center p-2 border-b">${cat.name} <button onclick="deleteCategory('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></li>`;
+            html += `<li class="flex justify-between items-center p-3"><span>${cat.name}</span> <button onclick="deleteCategory('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></li>`;
         });
         html += '</ul>';
         document.getElementById('menuTabContent').innerHTML = html;
     }
 
-    function showAddCategoryModal() {
+    window.showAddCategoryModal = function() {
         showModal(`
             <h2 class="text-xl font-bold mb-4">Tambah Kategori</h2>
-            <input type="text" id="categoryName" placeholder="Nama Kategori" class="w-full p-2 border rounded mb-3">
-            <button onclick="saveCategory()" class="btn-navy w-full">Simpan</button>
+            <input type="text" id="categoryName" placeholder="Nama Kategori" class="w-full p-2 border rounded-lg mb-3">
+            <button onclick="saveCategory()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
         `);
-    }
+    };
 
-    async function saveCategory() {
-        const name = document.getElementById('categoryName').value;
+    window.saveCategory = async function() {
+        const name = document.getElementById('categoryName').value.trim();
         if (!name) return alert('Nama harus diisi');
-        await db.collection('Owners').doc(currentOwnerId).collection('Categories').add({ name });
-        closeModal();
-        loadCategories();
-    }
-
-    function deleteCategory(id) {
-        if (confirm('Hapus kategori?')) {
-            db.collection('Owners').doc(currentOwnerId).collection('Categories').doc(id).delete();
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Categories').add({ name });
+            closeModal();
             loadCategories();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-    }
+    };
+
+    window.deleteCategory = async function(id) {
+        if (!confirm('Hapus kategori?')) return;
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Categories').doc(id).delete();
+            loadCategories();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
 
     async function loadUnits() {
         const snap = await db.collection('Owners').doc(currentOwnerId).collection('Units').get();
-        let html = '<div class="mb-4"><button onclick="showAddUnitModal()" class="btn-navy">Tambah Satuan</button></div>';
-        html += '<ul>';
+        let html = '<div class="mb-4"><button onclick="showAddUnitModal()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg">Tambah Satuan</button></div>';
+        html += '<ul class="bg-white dark:bg-gray-800 rounded-lg shadow divide-y dark:divide-gray-700">';
         snap.forEach(doc => {
             const unit = doc.data();
-            html += `<li class="flex justify-between items-center p-2 border-b">${unit.name} <button onclick="deleteUnit('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></li>`;
+            html += `<li class="flex justify-between items-center p-3"><span>${unit.name}</span> <button onclick="deleteUnit('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></li>`;
         });
         html += '</ul>';
         document.getElementById('menuTabContent').innerHTML = html;
     }
 
-    function showAddUnitModal() {
+    window.showAddUnitModal = function() {
         showModal(`
             <h2 class="text-xl font-bold mb-4">Tambah Satuan</h2>
-            <input type="text" id="unitName" placeholder="Nama Satuan (cth: Cup, Gram)" class="w-full p-2 border rounded mb-3">
-            <button onclick="saveUnit()" class="btn-navy w-full">Simpan</button>
+            <input type="text" id="unitName" placeholder="Nama Satuan (cth: Cup, Gram)" class="w-full p-2 border rounded-lg mb-3">
+            <button onclick="saveUnit()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
         `);
-    }
+    };
 
-    async function saveUnit() {
-        const name = document.getElementById('unitName').value;
+    window.saveUnit = async function() {
+        const name = document.getElementById('unitName').value.trim();
         if (!name) return alert('Nama harus diisi');
-        await db.collection('Owners').doc(currentOwnerId).collection('Units').add({ name });
-        closeModal();
-        loadUnits();
-    }
-
-    function deleteUnit(id) {
-        if (confirm('Hapus satuan?')) {
-            db.collection('Owners').doc(currentOwnerId).collection('Units').doc(id).delete();
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Units').add({ name });
+            closeModal();
             loadUnits();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-    }
+    };
+
+    window.deleteUnit = async function(id) {
+        if (!confirm('Hapus satuan?')) return;
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Units').doc(id).delete();
+            loadUnits();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
 
     async function loadVariants() {
         const snap = await db.collection('Owners').doc(currentOwnerId).collection('Variants').get();
-        let html = '<div class="mb-4"><button onclick="showAddVariantModal()" class="btn-navy">Tambah Varian</button></div>';
-        html += '<ul>';
+        let html = '<div class="mb-4"><button onclick="showAddVariantModal()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg">Tambah Varian</button></div>';
+        html += '<ul class="bg-white dark:bg-gray-800 rounded-lg shadow divide-y dark:divide-gray-700">';
         snap.forEach(doc => {
             const variant = doc.data();
-            html += `<li class="flex justify-between items-center p-2 border-b">${variant.name} <button onclick="deleteVariant('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></li>`;
+            html += `<li class="flex justify-between items-center p-3"><span>${variant.name}</span> <button onclick="deleteVariant('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></li>`;
         });
         html += '</ul>';
         document.getElementById('menuTabContent').innerHTML = html;
     }
 
-    function showAddVariantModal() {
+    window.showAddVariantModal = function() {
         showModal(`
             <h2 class="text-xl font-bold mb-4">Tambah Varian</h2>
-            <input type="text" id="variantName" placeholder="Nama Varian (cth: Panas, Dingin)" class="w-full p-2 border rounded mb-3">
-            <button onclick="saveVariant()" class="btn-navy w-full">Simpan</button>
+            <input type="text" id="variantName" placeholder="Nama Varian (cth: Panas, Dingin)" class="w-full p-2 border rounded-lg mb-3">
+            <button onclick="saveVariant()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
         `);
-    }
+    };
 
-    async function saveVariant() {
-        const name = document.getElementById('variantName').value;
+    window.saveVariant = async function() {
+        const name = document.getElementById('variantName').value.trim();
         if (!name) return alert('Nama harus diisi');
-        await db.collection('Owners').doc(currentOwnerId).collection('Variants').add({ name });
-        closeModal();
-        loadVariants();
-    }
-
-    function deleteVariant(id) {
-        if (confirm('Hapus varian?')) {
-            db.collection('Owners').doc(currentOwnerId).collection('Variants').doc(id).delete();
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Variants').add({ name });
+            closeModal();
             loadVariants();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-    }
+    };
 
-    function showAddMenuModal() {
-        Promise.all([
+    window.deleteVariant = async function(id) {
+        if (!confirm('Hapus varian?')) return;
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Variants').doc(id).delete();
+            loadVariants();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
+
+    window.showAddMenuModal = async function() {
+        const [catSnap, unitSnap, varSnap, ingSnap] = await Promise.all([
             db.collection('Owners').doc(currentOwnerId).collection('Categories').get(),
             db.collection('Owners').doc(currentOwnerId).collection('Units').get(),
             db.collection('Owners').doc(currentOwnerId).collection('Variants').get(),
             db.collection('Owners').doc(currentOwnerId).collection('Ingredients').get()
-        ]).then(([catSnap, unitSnap, varSnap, ingSnap]) => {
-            let catOptions = '<option value="">Pilih Kategori</option>';
-            catSnap.forEach(doc => catOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
-            let unitOptions = '<option value="">Pilih Satuan</option>';
-            unitSnap.forEach(doc => unitOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
-            let varOptions = '<option value="">Pilih Varian (opsional)</option>';
-            varSnap.forEach(doc => varOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
-            let ingOptions = '';
-            ingSnap.forEach(doc => ingOptions += `<option value="${doc.id}" data-price="${doc.data().avgBuyPrice || 0}">${doc.data().name}</option>`);
+        ]);
+        let catOptions = '<option value="">Pilih Kategori</option>';
+        catSnap.forEach(doc => catOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
+        let unitOptions = '<option value="">Pilih Satuan</option>';
+        unitSnap.forEach(doc => unitOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
+        let varOptions = '<option value="">Pilih Varian (opsional)</option>';
+        varSnap.forEach(doc => varOptions += `<option value="${doc.id}">${doc.data().name}</option>`);
+        let ingOptions = '';
+        ingSnap.forEach(doc => ingOptions += `<option value="${doc.id}" data-price="${doc.data().avgBuyPrice || 0}">${doc.data().name}</option>`);
 
-            showModal(`
-                <h2 class="text-xl font-bold mb-4">Tambah Menu</h2>
-                <input type="text" id="menuName" placeholder="Nama Menu" class="w-full p-2 border rounded mb-3">
-                <select id="menuCategory" class="w-full p-2 border rounded mb-3">${catOptions}</select>
-                <select id="menuUnit" class="w-full p-2 border rounded mb-3">${unitOptions}</select>
-                <select id="menuVariant" class="w-full p-2 border rounded mb-3">${varOptions}</select>
-                <div class="grid grid-cols-2 gap-2 mb-3">
-                    <input type="number" id="priceTunai" placeholder="Harga Tunai" class="p-2 border rounded">
-                    <input type="number" id="priceTransfer" placeholder="Harga Transfer" class="p-2 border rounded">
-                    <input type="number" id="priceGofood" placeholder="Harga GoFood" class="p-2 border rounded">
-                    <input type="number" id="priceShopeefood" placeholder="Harga ShopeeFood" class="p-2 border rounded">
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Menu</h2>
+            <input type="text" id="menuName" placeholder="Nama Menu" class="w-full p-2 border rounded-lg mb-3">
+            <select id="menuCategory" class="w-full p-2 border rounded-lg mb-3">${catOptions}</select>
+            <select id="menuUnit" class="w-full p-2 border rounded-lg mb-3">${unitOptions}</select>
+            <select id="menuVariant" class="w-full p-2 border rounded-lg mb-3">${varOptions}</select>
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <input type="number" id="priceTunai" placeholder="Harga Tunai" class="p-2 border rounded-lg">
+                <input type="number" id="priceTransfer" placeholder="Harga Transfer" class="p-2 border rounded-lg">
+                <input type="number" id="priceGofood" placeholder="Harga GoFood" class="p-2 border rounded-lg">
+                <input type="number" id="priceShopeefood" placeholder="Harga ShopeeFood" class="p-2 border rounded-lg">
+            </div>
+            <div class="mb-3">
+                <label class="block">Diskon GoFood (%)</label>
+                <input type="number" id="discountGofood" value="0" class="w-full p-2 border rounded-lg">
+            </div>
+            <div class="mb-3">
+                <label class="block">Diskon ShopeeFood (%)</label>
+                <input type="number" id="discountShopeefood" value="0" class="w-full p-2 border rounded-lg">
+            </div>
+            <div class="mb-3">
+                <label class="block">PPN (%)</label>
+                <input type="number" id="taxPpn" value="0" class="w-full p-2 border rounded-lg">
+            </div>
+            <h3 class="font-bold mb-2">Resep (Bahan Baku)</h3>
+            <div id="recipeContainer">
+                <div class="flex gap-2 mb-2">
+                    <select class="recipe-ingredient w-1/2 p-2 border rounded-lg">${ingOptions}</select>
+                    <input type="number" class="recipe-qty w-1/4 p-2 border rounded-lg" placeholder="Qty">
+                    <button type="button" onclick="addRecipeRow()" class="text-green-600"><i class="fas fa-plus"></i></button>
                 </div>
-                <div class="mb-3">
-                    <label class="block">Diskon GoFood (%)</label>
-                    <input type="number" id="discountGofood" value="0" class="w-full p-2 border rounded">
-                </div>
-                <div class="mb-3">
-                    <label class="block">Diskon ShopeeFood (%)</label>
-                    <input type="number" id="discountShopeefood" value="0" class="w-full p-2 border rounded">
-                </div>
-                <div class="mb-3">
-                    <label class="block">PPN (%)</label>
-                    <input type="number" id="taxPpn" value="0" class="w-full p-2 border rounded">
-                </div>
-                <h3 class="font-bold mb-2">Resep (Bahan Baku)</h3>
-                <div id="recipeContainer">
-                    <div class="flex gap-2 mb-2">
-                        <select class="recipe-ingredient w-1/2 p-2 border rounded">${ingOptions}</select>
-                        <input type="number" class="recipe-qty w-1/4 p-2 border rounded" placeholder="Qty">
-                        <button type="button" onclick="addRecipeRow()" class="text-green-600"><i class="fas fa-plus"></i></button>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="block">HPP (dihitung otomatis)</label>
-                    <input type="number" id="calculatedHpp" class="w-full p-2 border rounded bg-gray-100" readonly>
-                </div>
-                <button onclick="saveMenu()" class="btn-navy w-full">Simpan</button>
-            `);
-        });
-    }
+            </div>
+            <div class="mb-3">
+                <label class="block">HPP (dihitung otomatis)</label>
+                <input type="number" id="calculatedHpp" class="w-full p-2 border rounded-lg bg-gray-100 dark:bg-gray-700" readonly>
+            </div>
+            <button onclick="saveMenu()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
+        `);
+    };
 
-    function addRecipeRow() {
+    window.addRecipeRow = function() {
         const container = document.getElementById('recipeContainer');
         const row = document.createElement('div');
         row.className = 'flex gap-2 mb-2';
         row.innerHTML = `
-            <select class="recipe-ingredient w-1/2 p-2 border rounded">${document.querySelector('.recipe-ingredient').innerHTML}</select>
-            <input type="number" class="recipe-qty w-1/4 p-2 border rounded" placeholder="Qty">
+            <select class="recipe-ingredient w-1/2 p-2 border rounded-lg">${document.querySelector('.recipe-ingredient').innerHTML}</select>
+            <input type="number" class="recipe-qty w-1/4 p-2 border rounded-lg" placeholder="Qty">
             <button type="button" onclick="this.parentElement.remove()" class="text-red-600"><i class="fas fa-minus"></i></button>
         `;
         container.appendChild(row);
-    }
+    };
 
-    async function saveMenu() {
-        const name = document.getElementById('menuName').value;
+    window.saveMenu = async function() {
+        const name = document.getElementById('menuName').value.trim();
         const category = document.getElementById('menuCategory').value;
         const unit = document.getElementById('menuUnit').value;
         const variant = document.getElementById('menuVariant').value;
@@ -739,8 +942,7 @@
         const taxPpn = parseFloat(document.getElementById('taxPpn').value) || 0;
 
         const recipe = [];
-        const ingredientRows = document.querySelectorAll('#recipeContainer .flex');
-        ingredientRows.forEach(row => {
+        document.querySelectorAll('#recipeContainer .flex').forEach(row => {
             const ingSelect = row.querySelector('.recipe-ingredient');
             const qty = parseFloat(row.querySelector('.recipe-qty').value);
             if (ingSelect.value && qty) {
@@ -748,6 +950,7 @@
             }
         });
 
+        // Hitung HPP sementara
         let hpp = 0;
         for (let item of recipe) {
             const ingDoc = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc(item.ingId).get();
@@ -757,354 +960,442 @@
         }
         document.getElementById('calculatedHpp').value = hpp;
 
-        await db.collection('Owners').doc(currentOwnerId).collection('Menu').add({
-            name, category, unit, variant, prices, discounts, taxPpn, recipe,
-            calculatedHpp: hpp,
-            gridIndex: 0,
-            isActive: true,
-            imageUrl: '',
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert('Menu ditambahkan');
-        closeModal();
-        loadMenuList();
-    }
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Menu').add({
+                name, category, unit, variant, prices, discounts, taxPpn, recipe,
+                calculatedHpp: hpp,
+                gridIndex: 0,
+                isActive: true,
+                imageUrl: '',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeModal();
+            loadMenuList();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
 
-    function editMenu(id) {
+    window.editMenu = function(id) {
         alert('Edit menu: ' + id);
-    }
+    };
 
-    function toggleMenuActive(id, active) {
-        db.collection('Owners').doc(currentOwnerId).collection('Menu').doc(id).update({ isActive: active });
-    }
+    window.toggleMenuActive = async function(id, active) {
+        try {
+            await db.collection('Owners').doc(currentOwnerId).collection('Menu').doc(id).update({ isActive: active });
+            loadMenuList();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        }
+    };
 
-    async function syncHpp() {
-        const menusSnap = await db.collection('Owners').doc(currentOwnerId).collection('Menu').get();
-        const batch = db.batch();
-        for (const doc of menusSnap.docs) {
-            const menu = doc.data();
-            let hpp = 0;
-            if (menu.recipe) {
-                for (const item of menu.recipe) {
-                    const ingDoc = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc(item.ingId).get();
-                    if (ingDoc.exists) {
-                        hpp += (ingDoc.data().avgBuyPrice || 0) * item.qty;
+    window.syncHpp = async function() {
+        try {
+            showLoading();
+            const menusSnap = await db.collection('Owners').doc(currentOwnerId).collection('Menu').get();
+            const batch = db.batch();
+            for (const doc of menusSnap.docs) {
+                const menu = doc.data();
+                let hpp = 0;
+                if (menu.recipe) {
+                    for (const item of menu.recipe) {
+                        const ingDoc = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc(item.ingId).get();
+                        if (ingDoc.exists) {
+                            hpp += (ingDoc.data().avgBuyPrice || 0) * item.qty;
+                        }
                     }
                 }
+                batch.update(doc.ref, { calculatedHpp: hpp });
             }
-            batch.update(doc.ref, { calculatedHpp: hpp });
+            await batch.commit();
+            alert('HPP semua menu telah disinkronisasi');
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-        await batch.commit();
-        alert('HPP semua menu telah disinkronisasi');
-    }
+    };
 
     // ==================== STOK ====================
-    function renderStock() {
+    async function renderStock() {
         pageContent.innerHTML = `
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold">Manajemen Stok</h1>
-                <button onclick="showAddIngredientModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah Bahan</button>
+                <button onclick="showAddIngredientModal()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Tambah Bahan</button>
             </div>
-            <div id="ingredientsTable"></div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr><th>Nama</th><th>Satuan</th><th>Stok</th><th>Min</th><th>Harga Rata</th><th>Aksi</th></tr>
+                    </thead>
+                    <tbody id="ingredientsTableBody"></tbody>
+                </table>
+            </div>
         `;
-        loadIngredients();
+        await loadIngredients();
     }
 
     async function loadIngredients() {
         const snap = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').get();
-        let html = '<table class="w-full"><thead><tr class="bg-gray-100"><th>Nama</th><th>Satuan</th><th>Stok</th><th>Min</th><th>Harga Rata</th><th>Aksi</th></tr></thead><tbody>';
+        const tbody = document.getElementById('ingredientsTableBody');
+        if (!tbody) return;
+        if (snap.empty) {
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada bahan.</td></tr>';
+            return;
+        }
+        let html = '';
         snap.forEach(doc => {
             const ing = doc.data();
             const isLow = ing.currentStock <= ing.minStock;
-            html += `<tr class="border-b ${isLow ? 'bg-red-100' : ''}">
-                <td class="p-2">${ing.name}</td>
-                <td class="p-2">${ing.unit}</td>
-                <td class="p-2">${ing.currentStock}</td>
-                <td class="p-2">${ing.minStock}</td>
-                <td class="p-2">${formatRupiah(ing.avgBuyPrice)}</td>
-                <td class="p-2">
+            html += `<tr class="border-b dark:border-gray-700 ${isLow ? 'bg-red-50 dark:bg-red-900/20' : ''}">
+                <td class="p-3">${ing.name}</td>
+                <td class="p-3">${ing.unit}</td>
+                <td class="p-3">${ing.currentStock}</td>
+                <td class="p-3">${ing.minStock}</td>
+                <td class="p-3">${formatRupiah(ing.avgBuyPrice)}</td>
+                <td class="p-3">
                     <button onclick="showStockInModal('${doc.id}')" class="text-green-600 mr-2"><i class="fas fa-plus"></i></button>
                     <button onclick="editIngredient('${doc.id}')" class="text-blue-600"><i class="fas fa-edit"></i></button>
                 </td>
             </tr>`;
         });
-        html += '</tbody></table>';
-        document.getElementById('ingredientsTable').innerHTML = html;
+        tbody.innerHTML = html;
     }
 
-    function showAddIngredientModal() {
-        db.collection('Owners').doc(currentOwnerId).collection('Units').get().then(snap => {
-            let unitOptions = '<option value="">Pilih Satuan</option>';
-            snap.forEach(doc => unitOptions += `<option value="${doc.data().name}">${doc.data().name}</option>`);
-            showModal(`
-                <h2 class="text-xl font-bold mb-4">Tambah Bahan</h2>
-                <input type="text" id="ingName" placeholder="Nama Bahan" class="w-full p-2 border rounded mb-3">
-                <select id="ingUnit" class="w-full p-2 border rounded mb-3">${unitOptions}</select>
-                <input type="number" id="ingStock" placeholder="Stok Awal" class="w-full p-2 border rounded mb-3">
-                <input type="number" id="ingPrice" placeholder="Harga Beli per Unit" class="w-full p-2 border rounded mb-3">
-                <input type="number" id="ingMin" placeholder="Stok Minimum" class="w-full p-2 border rounded mb-3">
-                <button onclick="saveIngredient()" class="btn-navy w-full">Simpan</button>
-            `);
-        });
-    }
+    window.showAddIngredientModal = async function() {
+        const unitsSnap = await db.collection('Owners').doc(currentOwnerId).collection('Units').get();
+        let unitOptions = '<option value="">Pilih Satuan</option>';
+        unitsSnap.forEach(doc => unitOptions += `<option value="${doc.data().name}">${doc.data().name}</option>`);
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Bahan</h2>
+            <input type="text" id="ingName" placeholder="Nama Bahan" class="w-full p-2 border rounded-lg mb-3">
+            <select id="ingUnit" class="w-full p-2 border rounded-lg mb-3">${unitOptions}</select>
+            <input type="number" id="ingStock" placeholder="Stok Awal" class="w-full p-2 border rounded-lg mb-3">
+            <input type="number" id="ingPrice" placeholder="Harga Beli per Unit" class="w-full p-2 border rounded-lg mb-3">
+            <input type="number" id="ingMin" placeholder="Stok Minimum" class="w-full p-2 border rounded-lg mb-3">
+            <button onclick="saveIngredient()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
+        `);
+    };
 
-    async function saveIngredient() {
-        const name = document.getElementById('ingName').value;
+    window.saveIngredient = async function() {
+        const name = document.getElementById('ingName').value.trim();
         const unit = document.getElementById('ingUnit').value;
         const stock = parseFloat(document.getElementById('ingStock').value) || 0;
         const price = parseFloat(document.getElementById('ingPrice').value) || 0;
         const min = parseFloat(document.getElementById('ingMin').value) || 0;
         if (!name || !unit) return alert('Isi nama dan satuan');
-        const ingRef = db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc();
-        const batch = db.batch();
-        batch.set(ingRef, {
-            name, unit, currentStock: stock, minStock: min,
-            avgBuyPrice: price, lastPurchasePrice: price,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        if (stock > 0) {
+        try {
+            showLoading();
+            const ingRef = db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc();
+            const batch = db.batch();
+            batch.set(ingRef, {
+                name, unit, currentStock: stock, minStock: min,
+                avgBuyPrice: price, lastPurchasePrice: price,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            if (stock > 0) {
+                const expRef = db.collection('Owners').doc(currentOwnerId).collection('Expenses').doc();
+                batch.set(expRef, {
+                    expId: expRef.id,
+                    outletId: 'global',
+                    category: 'Belanja Stok',
+                    itemName: `Pembelian ${name}`,
+                    amount: stock * price,
+                    isStockPurchase: true,
+                    stockDetails: { ingId: ingRef.id, addedQty: stock, purchasePricePerUnit: price },
+                    inputBy: 'owner',
+                    inputById: currentOwnerId,
+                    notes: 'Stok awal',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            await batch.commit();
+            closeModal();
+            loadIngredients();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
+
+    window.showStockInModal = function(ingId) {
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Stok</h2>
+            <input type="number" id="stockQty" placeholder="Jumlah" class="w-full p-2 border rounded-lg mb-3">
+            <input type="number" id="stockPrice" placeholder="Harga per unit" class="w-full p-2 border rounded-lg mb-3">
+            <input type="text" id="stockNotes" placeholder="Catatan" class="w-full p-2 border rounded-lg mb-3">
+            <button onclick="processStockIn('${ingId}')" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
+        `);
+    };
+
+    window.processStockIn = async function(ingId) {
+        const qty = parseFloat(document.getElementById('stockQty').value);
+        const price = parseFloat(document.getElementById('stockPrice').value);
+        const notes = document.getElementById('stockNotes').value.trim();
+        if (!qty || !price) return alert('Isi jumlah dan harga');
+        try {
+            showLoading();
+            const ingRef = db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc(ingId);
+            const ingDoc = await ingRef.get();
+            const ing = ingDoc.data();
+            const currentStock = ing.currentStock;
+            const avgPrice = ing.avgBuyPrice || 0;
+            const newAvgPrice = ((currentStock * avgPrice) + (qty * price)) / (currentStock + qty);
+            const batch = db.batch();
+            batch.update(ingRef, {
+                currentStock: currentStock + qty,
+                avgBuyPrice: newAvgPrice,
+                lastPurchasePrice: price,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
             const expRef = db.collection('Owners').doc(currentOwnerId).collection('Expenses').doc();
             batch.set(expRef, {
                 expId: expRef.id,
                 outletId: 'global',
                 category: 'Belanja Stok',
-                itemName: `Pembelian ${name}`,
-                amount: stock * price,
+                itemName: `Pembelian ${ing.name}`,
+                amount: qty * price,
                 isStockPurchase: true,
-                stockDetails: { ingId: ingRef.id, addedQty: stock, purchasePricePerUnit: price },
+                stockDetails: { ingId, addedQty: qty, purchasePricePerUnit: price },
                 inputBy: 'owner',
                 inputById: currentOwnerId,
-                notes: 'Stok awal',
+                notes,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
+            await batch.commit();
+            closeModal();
+            loadIngredients();
+            loadStockLimit(); // refresh dashboard if visible
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-        await batch.commit();
-        alert('Bahan ditambahkan');
-        closeModal();
-        loadIngredients();
-    }
+    };
 
-    function showStockInModal(ingId) {
-        showModal(`
-            <h2 class="text-xl font-bold mb-4">Tambah Stok</h2>
-            <input type="number" id="stockQty" placeholder="Jumlah" class="w-full p-2 border rounded mb-3">
-            <input type="number" id="stockPrice" placeholder="Harga per unit" class="w-full p-2 border rounded mb-3">
-            <input type="text" id="stockNotes" placeholder="Catatan" class="w-full p-2 border rounded mb-3">
-            <button onclick="processStockIn('${ingId}')" class="btn-navy w-full">Simpan</button>
-        `);
-    }
-
-    async function processStockIn(ingId) {
-        const qty = parseFloat(document.getElementById('stockQty').value);
-        const price = parseFloat(document.getElementById('stockPrice').value);
-        const notes = document.getElementById('stockNotes').value;
-        if (!qty || !price) return alert('Isi jumlah dan harga');
-        const ingRef = db.collection('Owners').doc(currentOwnerId).collection('Ingredients').doc(ingId);
-        const ingDoc = await ingRef.get();
-        const ing = ingDoc.data();
-        const currentStock = ing.currentStock;
-        const avgPrice = ing.avgBuyPrice || 0;
-        const newAvgPrice = ((currentStock * avgPrice) + (qty * price)) / (currentStock + qty);
-        const batch = db.batch();
-        batch.update(ingRef, {
-            currentStock: currentStock + qty,
-            avgBuyPrice: newAvgPrice,
-            lastPurchasePrice: price,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        const expRef = db.collection('Owners').doc(currentOwnerId).collection('Expenses').doc();
-        batch.set(expRef, {
-            expId: expRef.id,
-            outletId: 'global',
-            category: 'Belanja Stok',
-            itemName: `Pembelian ${ing.name}`,
-            amount: qty * price,
-            isStockPurchase: true,
-            stockDetails: { ingId, addedQty: qty, purchasePricePerUnit: price },
-            inputBy: 'owner',
-            inputById: currentOwnerId,
-            notes,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        await batch.commit();
-        alert('Stok berhasil ditambahkan');
-        closeModal();
-        loadIngredients();
-        loadStockLimit();
-    }
-
-    function editIngredient(id) {
+    window.editIngredient = function(id) {
         alert('Edit bahan');
-    }
+    };
 
     // ==================== PENGELUARAN ====================
-    function renderExpenses() {
+    async function renderExpenses() {
         pageContent.innerHTML = `
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold">Pengeluaran</h1>
-                <button onclick="showAddExpenseModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah</button>
+                <button onclick="showAddExpenseModal()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Tambah</button>
             </div>
             <div class="mb-4">
-                <button onclick="renderTemplates()" class="btn-outline-navy">Kelola Template</button>
+                <button onclick="renderTemplates()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg">Kelola Template</button>
             </div>
-            <div id="expensesList"></div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Nominal</th><th>Tipe</th><th>Aksi</th></tr>
+                    </thead>
+                    <tbody id="expensesTableBody"></tbody>
+                </table>
+            </div>
         `;
-        loadExpensesList();
+        await loadExpensesList();
     }
 
     async function loadExpensesList() {
-        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Expenses').orderBy('timestamp', 'desc').limit(50).get();
-        let html = '<table class="w-full"><thead><tr class="bg-gray-100"><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Nominal</th><th>Tipe</th><th>Aksi</th></tr></thead><tbody>';
+        const snap = await db.collection('Owners').doc(currentOwnerId).collection('Expenses').orderBy('timestamp', 'desc').limit(100).get();
+        const tbody = document.getElementById('expensesTableBody');
+        if (!tbody) return;
+        if (snap.empty) {
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada pengeluaran.</td></tr>';
+            return;
+        }
+        let html = '';
         snap.forEach(doc => {
             const exp = doc.data();
-            const tgl = exp.timestamp ? new Date(exp.timestamp.seconds * 1000).toLocaleDateString('id-ID') : '-';
-            html += `<tr class="border-b">
-                <td class="p-2">${tgl}</td>
-                <td class="p-2">${exp.category}</td>
-                <td class="p-2">${exp.itemName}</td>
-                <td class="p-2">${formatRupiah(exp.amount)}</td>
-                <td class="p-2">${exp.isStockPurchase ? 'Aset' : 'Beban'}</td>
-                <td class="p-2"><button onclick="deleteExpense('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></td>
+            const tgl = exp.timestamp ? formatDate(exp.timestamp) : '-';
+            html += `<tr class="border-b dark:border-gray-700">
+                <td class="p-3">${tgl}</td>
+                <td class="p-3">${exp.category}</td>
+                <td class="p-3">${exp.itemName}</td>
+                <td class="p-3">${formatRupiah(exp.amount)}</td>
+                <td class="p-3">${exp.isStockPurchase ? 'Aset' : 'Beban'}</td>
+                <td class="p-3"><button onclick="deleteExpense('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></td>
             </tr>`;
         });
-        html += '</tbody></table>';
-        document.getElementById('expensesList').innerHTML = html;
+        tbody.innerHTML = html;
     }
 
-    function showAddExpenseModal() {
-        db.collection('Owners').doc(currentOwnerId).collection('Templates').get().then(snap => {
-            let templateOptions = '<option value="">Manual</option>';
-            snap.forEach(doc => templateOptions += `<option value="${doc.id}" data-cat="${doc.data().category}" data-amount="${doc.data().defaultAmount || 0}">${doc.data().name}</option>`);
-            showModal(`
-                <h2 class="text-xl font-bold mb-4">Tambah Pengeluaran</h2>
-                <select id="expTemplate" class="w-full p-2 border rounded mb-3">${templateOptions}</select>
-                <input type="text" id="expCategory" placeholder="Kategori" class="w-full p-2 border rounded mb-3">
-                <input type="text" id="expItem" placeholder="Keterangan" class="w-full p-2 border rounded mb-3">
-                <input type="number" id="expAmount" placeholder="Nominal" class="w-full p-2 border rounded mb-3">
-                <div class="mb-3">
-                    <label class="inline-flex items-center"><input type="radio" name="expType" value="false" checked> Beban (Operasional)</label>
-                    <label class="inline-flex items-center ml-4"><input type="radio" name="expType" value="true"> Aset (Stok)</label>
-                </div>
-                <button onclick="saveExpense()" class="btn-navy w-full">Simpan</button>
-            `);
-            document.getElementById('expTemplate').addEventListener('change', function() {
-                const selected = this.options[this.selectedIndex];
-                if (selected.value) {
-                    document.getElementById('expCategory').value = selected.dataset.cat || '';
-                    document.getElementById('expAmount').value = selected.dataset.amount || '';
-                }
-            });
+    window.showAddExpenseModal = async function() {
+        const templatesSnap = await db.collection('Owners').doc(currentOwnerId).collection('Templates').get();
+        let templateOptions = '<option value="">Manual</option>';
+        templatesSnap.forEach(doc => templateOptions += `<option value="${doc.id}" data-cat="${doc.data().category}" data-amount="${doc.data().defaultAmount || 0}">${doc.data().name}</option>`);
+        showModal(`
+            <h2 class="text-xl font-bold mb-4">Tambah Pengeluaran</h2>
+            <select id="expTemplate" class="w-full p-2 border rounded-lg mb-3">${templateOptions}</select>
+            <input type="text" id="expCategory" placeholder="Kategori" class="w-full p-2 border rounded-lg mb-3">
+            <input type="text" id="expItem" placeholder="Keterangan" class="w-full p-2 border rounded-lg mb-3">
+            <input type="number" id="expAmount" placeholder="Nominal" class="w-full p-2 border rounded-lg mb-3">
+            <div class="mb-3">
+                <label class="inline-flex items-center"><input type="radio" name="expType" value="false" checked> Beban (Operasional)</label>
+                <label class="inline-flex items-center ml-4"><input type="radio" name="expType" value="true"> Aset (Stok)</label>
+            </div>
+            <button onclick="saveExpense()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
+        `);
+        document.getElementById('expTemplate').addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            if (selected.value) {
+                document.getElementById('expCategory').value = selected.dataset.cat || '';
+                document.getElementById('expAmount').value = selected.dataset.amount || '';
+            }
         });
-    }
+    };
 
-    async function saveExpense() {
-        const category = document.getElementById('expCategory').value;
-        const itemName = document.getElementById('expItem').value;
+    window.saveExpense = async function() {
+        const category = document.getElementById('expCategory').value.trim();
+        const itemName = document.getElementById('expItem').value.trim();
         const amount = parseFloat(document.getElementById('expAmount').value);
         const isStockPurchase = document.querySelector('input[name="expType"]:checked').value === 'true';
         if (!category || !itemName || !amount) return alert('Isi semua field');
-        await db.collection('Owners').doc(currentOwnerId).collection('Expenses').add({
-            outletId: 'global',
-            category, itemName, amount, isStockPurchase,
-            inputBy: 'owner',
-            inputById: currentOwnerId,
-            notes: '',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert('Pengeluaran dicatat');
-        closeModal();
-        loadExpensesList();
-    }
-
-    function deleteExpense(id) {
-        if (confirm('Hapus pengeluaran ini?')) {
-            db.collection('Owners').doc(currentOwnerId).collection('Expenses').doc(id).delete();
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Expenses').add({
+                outletId: 'global',
+                category, itemName, amount, isStockPurchase,
+                inputBy: 'owner',
+                inputById: currentOwnerId,
+                notes: '',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeModal();
             loadExpensesList();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-    }
+    };
 
-    function renderTemplates() {
+    window.deleteExpense = async function(id) {
+        if (!confirm('Hapus pengeluaran ini?')) return;
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Expenses').doc(id).delete();
+            loadExpensesList();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
+
+    async function renderTemplates() {
         pageContent.innerHTML = `
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold">Template Pengeluaran</h1>
-                <button onclick="showAddTemplateModal()" class="btn-navy"><i class="fas fa-plus mr-1"></i>Tambah</button>
+                <button onclick="showAddTemplateModal()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Tambah</button>
             </div>
-            <div id="templatesList"></div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr><th>Nama</th><th>Tipe</th><th>Kategori</th><th>Default</th><th>Aksi</th></tr>
+                    </thead>
+                    <tbody id="templatesTableBody"></tbody>
+                </table>
+            </div>
         `;
-        loadTemplates();
+        await loadTemplates();
     }
 
     async function loadTemplates() {
         const snap = await db.collection('Owners').doc(currentOwnerId).collection('Templates').get();
-        let html = '<table class="w-full"><thead><tr class="bg-gray-100"><th>Nama</th><th>Tipe</th><th>Kategori</th><th>Default</th><th>Aksi</th></tr></thead><tbody>';
+        const tbody = document.getElementById('templatesTableBody');
+        if (!tbody) return;
+        if (snap.empty) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada template.</td></tr>';
+            return;
+        }
+        let html = '';
         snap.forEach(doc => {
             const t = doc.data();
-            html += `<tr class="border-b">
-                <td class="p-2">${t.name}</td>
-                <td class="p-2">${t.type}</td>
-                <td class="p-2">${t.category}</td>
-                <td class="p-2">${formatRupiah(t.defaultAmount || 0)}</td>
-                <td class="p-2"><button onclick="deleteTemplate('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></td>
+            html += `<tr class="border-b dark:border-gray-700">
+                <td class="p-3">${t.name}</td>
+                <td class="p-3">${t.type}</td>
+                <td class="p-3">${t.category}</td>
+                <td class="p-3">${formatRupiah(t.defaultAmount || 0)}</td>
+                <td class="p-3"><button onclick="deleteTemplate('${doc.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></td>
             </tr>`;
         });
-        html += '</tbody></table>';
-        document.getElementById('templatesList').innerHTML = html;
+        tbody.innerHTML = html;
     }
 
-    function showAddTemplateModal() {
+    window.showAddTemplateModal = function() {
         showModal(`
             <h2 class="text-xl font-bold mb-4">Tambah Template</h2>
-            <input type="text" id="tempName" placeholder="Nama Template" class="w-full p-2 border rounded mb-3">
-            <select id="tempType" class="w-full p-2 border rounded mb-3">
+            <input type="text" id="tempName" placeholder="Nama Template" class="w-full p-2 border rounded-lg mb-3">
+            <select id="tempType" class="w-full p-2 border rounded-lg mb-3">
                 <option value="owner">Owner</option>
                 <option value="kasir">Kasir</option>
             </select>
-            <input type="text" id="tempCategory" placeholder="Kategori (misal: Fix Cost)" class="w-full p-2 border rounded mb-3">
-            <input type="number" id="tempAmount" placeholder="Nominal Default" class="w-full p-2 border rounded mb-3">
-            <button onclick="saveTemplate()" class="btn-navy w-full">Simpan</button>
+            <input type="text" id="tempCategory" placeholder="Kategori (misal: Fix Cost)" class="w-full p-2 border rounded-lg mb-3">
+            <input type="number" id="tempAmount" placeholder="Nominal Default" class="w-full p-2 border rounded-lg mb-3">
+            <button onclick="saveTemplate()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg">Simpan</button>
         `);
-    }
+    };
 
-    async function saveTemplate() {
-        const name = document.getElementById('tempName').value;
+    window.saveTemplate = async function() {
+        const name = document.getElementById('tempName').value.trim();
         const type = document.getElementById('tempType').value;
-        const category = document.getElementById('tempCategory').value;
+        const category = document.getElementById('tempCategory').value.trim();
         const amount = parseFloat(document.getElementById('tempAmount').value) || 0;
         if (!name || !type || !category) return alert('Isi semua field');
-        await db.collection('Owners').doc(currentOwnerId).collection('Templates').add({
-            name, type, category, defaultAmount: amount, isActive: true
-        });
-        alert('Template ditambahkan');
-        closeModal();
-        loadTemplates();
-    }
-
-    function deleteTemplate(id) {
-        if (confirm('Hapus template?')) {
-            db.collection('Owners').doc(currentOwnerId).collection('Templates').doc(id).delete();
-            loadTemplates();
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Templates').add({
+                name, type, category, defaultAmount: amount, isActive: true
+            });
+            closeModal();
+            renderTemplates(); // refresh
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-    }
+    };
+
+    window.deleteTemplate = async function(id) {
+        if (!confirm('Hapus template?')) return;
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Templates').doc(id).delete();
+            renderTemplates();
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
 
     // ==================== LAPORAN ====================
-    function renderReports() {
+    async function renderReports() {
         pageContent.innerHTML = `
-            <h1 class="text-2xl font-bold mb-4">Laporan</h1>
+            <h1 class="text-2xl font-bold mb-6">Laporan</h1>
             <div class="mb-4 flex flex-wrap gap-2">
-                <select id="reportPeriod" class="p-2 border rounded">
+                <select id="reportPeriod" class="p-2 border rounded-lg dark:bg-gray-800">
                     <option value="today">Hari ini</option>
                     <option value="yesterday">Kemarin</option>
                     <option value="week">7 hari</option>
                     <option value="month">Bulan ini</option>
                     <option value="custom">Kustom</option>
                 </select>
-                <input type="date" id="startDate" class="p-2 border rounded hidden">
-                <input type="date" id="endDate" class="p-2 border rounded hidden">
-                <button onclick="exportExcel()" class="btn-navy"><i class="fas fa-file-excel"></i> Excel</button>
-                <button onclick="exportJPEG()" class="btn-outline-navy"><i class="fas fa-image"></i> JPEG</button>
+                <input type="date" id="startDate" class="p-2 border rounded-lg dark:bg-gray-800 hidden">
+                <input type="date" id="endDate" class="p-2 border rounded-lg dark:bg-gray-800 hidden">
+                <button onclick="exportExcel()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg"><i class="fas fa-file-excel mr-2"></i>Excel</button>
+                <button onclick="exportJPEG()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg"><i class="fas fa-image mr-2"></i>JPEG</button>
             </div>
-            <div id="reportSummary" class="bg-white p-4 rounded-lg shadow">
-                <p>Pilih periode dan klik ekspor.</p>
+            <div id="reportSummary" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <p class="text-gray-500">Pilih periode dan klik ekspor.</p>
             </div>
         `;
         document.getElementById('reportPeriod').addEventListener('change', function() {
@@ -1114,7 +1405,7 @@
         });
     }
 
-    async function exportExcel() {
+    window.exportExcel = async function() {
         const period = document.getElementById('reportPeriod').value;
         let start, end;
         const now = new Date();
@@ -1133,102 +1424,116 @@
         } else if (period === 'custom') {
             start = new Date(document.getElementById('startDate').value);
             end = new Date(document.getElementById('endDate').value);
+            if (!start || !end) return alert('Pilih tanggal');
             end.setHours(23,59,59);
         }
-        const transSnap = await db.collection('Owners').doc(currentOwnerId).collection('Transactions')
-            .where('timestamp', '>=', start).where('timestamp', '<=', end).get();
-        const expensesSnap = await db.collection('Owners').doc(currentOwnerId).collection('Expenses')
-            .where('timestamp', '>=', start).where('timestamp', '<=', end).get();
-        const ingredientsSnap = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').get();
+        showLoading();
+        try {
+            const transSnap = await db.collection('Owners').doc(currentOwnerId).collection('Transactions')
+                .where('timestamp', '>=', start).where('timestamp', '<=', end).get();
+            const expensesSnap = await db.collection('Owners').doc(currentOwnerId).collection('Expenses')
+                .where('timestamp', '>=', start).where('timestamp', '<=', end).get();
+            const ingredientsSnap = await db.collection('Owners').doc(currentOwnerId).collection('Ingredients').get();
 
-        const wb = XLSX.utils.book_new();
+            const wb = XLSX.utils.book_new();
 
-        let totalPenjualan = 0, totalHPP = 0, totalExpense = 0;
-        transSnap.forEach(doc => {
-            const data = doc.data();
-            if (!data.isVoid) {
-                totalPenjualan += data.totalPayment || 0;
-                totalHPP += data.totalHpp || 0;
-            }
-        });
-        expensesSnap.forEach(doc => {
-            const data = doc.data();
-            if (!data.isStockPurchase) totalExpense += data.amount || 0;
-        });
-        const labaKotor = totalPenjualan - totalHPP;
-        const labaBersih = labaKotor - totalExpense;
-        const sheetRingkasan = XLSX.utils.aoa_to_sheet([
-            ['Ringkasan Laba Rugi'],
-            ['Deskripsi', 'Nilai'],
-            ['Total Penjualan', totalPenjualan],
-            ['Total HPP Terjual', totalHPP],
-            ['Laba Kotor', labaKotor],
-            ['Total Pengeluaran', totalExpense],
-            ['Laba Bersih', labaBersih]
-        ]);
-        XLSX.utils.book_append_sheet(wb, sheetRingkasan, 'Ringkasan');
-
-        const transData = [['No Invoice', 'Tanggal', 'Jam', 'Kasir', 'Item', 'Qty', 'Harga', 'Total', 'HPP', 'Profit']];
-        transSnap.forEach(doc => {
-            const t = doc.data();
-            const tgl = t.timestamp ? new Date(t.timestamp.seconds*1000).toLocaleDateString('id-ID') : '';
-            const jam = t.timestamp ? new Date(t.timestamp.seconds*1000).toLocaleTimeString('id-ID') : '';
-            t.items.forEach(item => {
-                transData.push([
-                    t.invoiceNo, tgl, jam, t.cashierName, item.name, item.qty,
-                    item.price, item.subtotal, item.hppAtTime, item.subtotal - (item.hppAtTime * item.qty)
-                ]);
+            // Sheet Ringkasan
+            let totalPenjualan = 0, totalHPP = 0, totalExpense = 0;
+            transSnap.forEach(doc => {
+                const data = doc.data();
+                if (!data.isVoid) {
+                    totalPenjualan += data.totalPayment || 0;
+                    totalHPP += data.totalHpp || 0;
+                }
             });
-        });
-        const sheetTrans = XLSX.utils.aoa_to_sheet(transData);
-        XLSX.utils.book_append_sheet(wb, sheetTrans, 'Transaksi');
+            expensesSnap.forEach(doc => {
+                const data = doc.data();
+                if (!data.isStockPurchase) totalExpense += data.amount || 0;
+            });
+            const labaKotor = totalPenjualan - totalHPP;
+            const labaBersih = labaKotor - totalExpense;
+            const sheetRingkasan = XLSX.utils.aoa_to_sheet([
+                ['Ringkasan Laba Rugi'],
+                ['Deskripsi', 'Nilai'],
+                ['Total Penjualan', totalPenjualan],
+                ['Total HPP Terjual', totalHPP],
+                ['Laba Kotor', labaKotor],
+                ['Total Pengeluaran', totalExpense],
+                ['Laba Bersih', labaBersih]
+            ]);
+            XLSX.utils.book_append_sheet(wb, sheetRingkasan, 'Ringkasan');
 
-        const expData = [['Tanggal', 'Kategori', 'Keterangan', 'Nominal', 'Tipe']];
-        expensesSnap.forEach(doc => {
-            const e = doc.data();
-            const tgl = e.timestamp ? new Date(e.timestamp.seconds*1000).toLocaleDateString('id-ID') : '';
-            expData.push([tgl, e.category, e.itemName, e.amount, e.isStockPurchase ? 'Aset' : 'Beban']);
-        });
-        const sheetExp = XLSX.utils.aoa_to_sheet(expData);
-        XLSX.utils.book_append_sheet(wb, sheetExp, 'Pengeluaran');
-
-        const stokData = [['Nama Bahan', 'Satuan', 'Stok Akhir', 'Min Stok']];
-        ingredientsSnap.forEach(doc => {
-            const i = doc.data();
-            stokData.push([i.name, i.unit, i.currentStock, i.minStock]);
-        });
-        const sheetStok = XLSX.utils.aoa_to_sheet(stokData);
-        XLSX.utils.book_append_sheet(wb, sheetStok, 'Stok');
-
-        const menuCount = {};
-        transSnap.forEach(doc => {
-            const t = doc.data();
-            if (!t.isVoid) {
+            // Sheet Transaksi
+            const transData = [['No Invoice', 'Tanggal', 'Jam', 'Kasir', 'Item', 'Qty', 'Harga', 'Total', 'HPP', 'Profit']];
+            transSnap.forEach(doc => {
+                const t = doc.data();
+                const tgl = t.timestamp ? formatDate(t.timestamp) : '';
+                const jam = t.timestamp ? new Date(t.timestamp.seconds*1000).toLocaleTimeString('id-ID') : '';
                 t.items.forEach(item => {
-                    const key = item.name;
-                    if (!menuCount[key]) menuCount[key] = { qty:0, omzet:0, hpp:0 };
-                    menuCount[key].qty += item.qty;
-                    menuCount[key].omzet += item.subtotal;
-                    menuCount[key].hpp += (item.hppAtTime * item.qty);
+                    transData.push([
+                        t.invoiceNo, tgl, jam, t.cashierName, item.name, item.qty,
+                        item.price, item.subtotal, item.hppAtTime, item.subtotal - (item.hppAtTime * item.qty)
+                    ]);
                 });
-            }
-        });
-        const menuData = [['Nama Menu', 'Qty Terjual', 'Omzet', 'HPP', 'Profit']];
-        Object.entries(menuCount).forEach(([name, val]) => {
-            menuData.push([name, val.qty, val.omzet, val.hpp, val.omzet - val.hpp]);
-        });
-        const sheetMenu = XLSX.utils.aoa_to_sheet(menuData);
-        XLSX.utils.book_append_sheet(wb, sheetMenu, 'Menu Terjual');
+            });
+            const sheetTrans = XLSX.utils.aoa_to_sheet(transData);
+            XLSX.utils.book_append_sheet(wb, sheetTrans, 'Transaksi');
 
-        XLSX.writeFile(wb, `laporan_${start.toISOString().slice(0,10)}.xlsx`);
-    }
+            // Sheet Pengeluaran
+            const expData = [['Tanggal', 'Kategori', 'Keterangan', 'Nominal', 'Tipe']];
+            expensesSnap.forEach(doc => {
+                const e = doc.data();
+                const tgl = e.timestamp ? formatDate(e.timestamp) : '';
+                expData.push([tgl, e.category, e.itemName, e.amount, e.isStockPurchase ? 'Aset' : 'Beban']);
+            });
+            const sheetExp = XLSX.utils.aoa_to_sheet(expData);
+            XLSX.utils.book_append_sheet(wb, sheetExp, 'Pengeluaran');
 
-    async function exportJPEG() {
+            // Sheet Stok
+            const stokData = [['Nama Bahan', 'Satuan', 'Stok Akhir', 'Min Stok']];
+            ingredientsSnap.forEach(doc => {
+                const i = doc.data();
+                stokData.push([i.name, i.unit, i.currentStock, i.minStock]);
+            });
+            const sheetStok = XLSX.utils.aoa_to_sheet(stokData);
+            XLSX.utils.book_append_sheet(wb, sheetStok, 'Stok');
+
+            // Sheet Menu Terjual
+            const menuCount = {};
+            transSnap.forEach(doc => {
+                const t = doc.data();
+                if (!t.isVoid) {
+                    t.items.forEach(item => {
+                        const key = item.name;
+                        if (!menuCount[key]) menuCount[key] = { qty:0, omzet:0, hpp:0 };
+                        menuCount[key].qty += item.qty;
+                        menuCount[key].omzet += item.subtotal;
+                        menuCount[key].hpp += (item.hppAtTime * item.qty);
+                    });
+                }
+            });
+            const menuData = [['Nama Menu', 'Qty Terjual', 'Omzet', 'HPP', 'Profit']];
+            Object.entries(menuCount).forEach(([name, val]) => {
+                menuData.push([name, val.qty, val.omzet, val.hpp, val.omzet - val.hpp]);
+            });
+            const sheetMenu = XLSX.utils.aoa_to_sheet(menuData);
+            XLSX.utils.book_append_sheet(wb, sheetMenu, 'Menu Terjual');
+
+            XLSX.writeFile(wb, `laporan_${start.toISOString().slice(0,10)}.xlsx`);
+        } catch (e) {
+            alert('Gagal ekspor: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
+
+    window.exportJPEG = async function() {
         const summaryDiv = document.getElementById('reportSummary');
-        summaryDiv.innerHTML = '<p>Mengambil data...</p>';
+        summaryDiv.innerHTML = '<p class="text-gray-500">Mengambil data...</p>';
+        // Ambil data ringkasan dari dashboard (sederhana)
         const income = incomeToday, expense = expenseToday, profit = profitToday, voidCount = voidToday;
         summaryDiv.innerHTML = `
-            <h2 class="font-bold text-lg">Ringkasan Keuangan</h2>
+            <h2 class="font-bold text-lg mb-2">Ringkasan Keuangan</h2>
             <p>Pemasukan: ${formatRupiah(income)}</p>
             <p>Pengeluaran: ${formatRupiah(expense)}</p>
             <p>Profit: ${formatRupiah(profit)}</p>
@@ -1240,31 +1545,31 @@
             link.href = canvas.toDataURL();
             link.click();
         });
-    }
+    };
 
     // ==================== PROFIL ====================
-    function renderProfile() {
+    async function renderProfile() {
         pageContent.innerHTML = `
-            <h1 class="text-2xl font-bold mb-4">Profil</h1>
-            <div class="bg-white p-6 rounded-lg shadow">
+            <h1 class="text-2xl font-bold mb-6">Profil</h1>
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow max-w-lg mx-auto">
                 <div class="mb-4">
                     <label class="block mb-1">Nama</label>
-                    <input type="text" id="profileName" class="w-full p-2 border rounded">
+                    <input type="text" id="profileName" class="w-full p-2 border rounded-lg dark:bg-gray-700">
                 </div>
                 <div class="mb-4">
                     <label class="block mb-1">Email</label>
-                    <input type="email" id="profileEmail" class="w-full p-2 border rounded" disabled>
+                    <input type="email" id="profileEmail" class="w-full p-2 border rounded-lg bg-gray-100 dark:bg-gray-700" disabled>
                 </div>
                 <div class="mb-4">
                     <label class="block mb-1">Nomor WA</label>
-                    <input type="tel" id="profilePhone" class="w-full p-2 border rounded">
+                    <input type="tel" id="profilePhone" class="w-full p-2 border rounded-lg dark:bg-gray-700">
                 </div>
-                <button onclick="updateProfile()" class="btn-navy w-full mb-4">Simpan Profil</button>
-                <hr class="my-4">
+                <button onclick="updateProfile()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg mb-4">Simpan Profil</button>
+                <hr class="my-4 dark:border-gray-700">
                 <h2 class="font-bold mb-2">Pengaturan Nota</h2>
                 <div class="mb-4">
                     <label class="block mb-1">Ukuran Logo</label>
-                    <select id="logoSize" class="w-full p-2 border rounded">
+                    <select id="logoSize" class="w-full p-2 border rounded-lg dark:bg-gray-700">
                         <option value="small">Kecil</option>
                         <option value="medium">Sedang</option>
                         <option value="large">Besar</option>
@@ -1272,13 +1577,13 @@
                 </div>
                 <div class="mb-4">
                     <label class="block mb-1">Teks Footer</label>
-                    <input type="text" id="footerText" class="w-full p-2 border rounded">
+                    <input type="text" id="footerText" class="w-full p-2 border rounded-lg dark:bg-gray-700">
                 </div>
-                <button onclick="updateReceiptSettings()" class="btn-navy w-full mb-4">Simpan Setting Nota</button>
-                <button onclick="logout()" class="btn-outline-navy w-full">Logout</button>
+                <button onclick="updateReceiptSettings()" class="w-full bg-navy-800 hover:bg-navy-900 text-white py-2 rounded-lg mb-4">Simpan Setting Nota</button>
+                <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg">Logout</button>
             </div>
         `;
-        loadProfile();
+        await loadProfile();
     }
 
     async function loadProfile() {
@@ -1298,46 +1603,44 @@
         }
     }
 
-    async function updateProfile() {
-        const name = document.getElementById('profileName').value;
-        const phone = document.getElementById('profilePhone').value;
-        await db.collection('Master_Owners').doc(currentOwnerId).update({ name, phone });
-        alert('Profil diperbarui');
-    }
-
-    async function updateReceiptSettings() {
-        const logoSize = document.getElementById('logoSize').value;
-        const footerText = document.getElementById('footerText').value;
-        await db.collection('Owners').doc(currentOwnerId).collection('Settings').doc('receipt').set({
-            logoSize, footerText, watermark: true, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        alert('Setting nota disimpan');
-    }
-
-    function logout() {
-        auth.signOut();
-    }
-
-    // ==================== UTILS ====================
-    function formatRupiah(angka) {
-        return 'Rp ' + angka.toLocaleString('id-ID');
-    }
-
-    function showModal(html) {
-        const modal = document.getElementById('modalContainer');
-        modal.innerHTML = `<div class="modal-overlay" onclick="closeModal(event)"><div class="modal-card" onclick="event.stopPropagation()">${html}</div></div>`;
-        modal.classList.remove('hidden');
-    }
-
-    function closeModal(e) {
-        if (e && e.target.classList.contains('modal-overlay')) {
-            document.getElementById('modalContainer').classList.add('hidden');
-        } else {
-            document.getElementById('modalContainer').classList.add('hidden');
+    window.updateProfile = async function() {
+        const name = document.getElementById('profileName').value.trim();
+        const phone = document.getElementById('profilePhone').value.trim();
+        try {
+            showLoading();
+            await db.collection('Master_Owners').doc(currentOwnerId).update({ name, phone });
+            alert('Profil diperbarui');
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
-    }
+    };
 
-    // ==================== AUTH TABS ====================
+    window.updateReceiptSettings = async function() {
+        const logoSize = document.getElementById('logoSize').value;
+        const footerText = document.getElementById('footerText').value.trim();
+        try {
+            showLoading();
+            await db.collection('Owners').doc(currentOwnerId).collection('Settings').doc('receipt').set({
+                logoSize, footerText, watermark: true, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            alert('Setting nota disimpan');
+        } catch (e) {
+            alert('Gagal: ' + e.message);
+        } finally {
+            hideLoading();
+        }
+    };
+
+    window.logout = function() {
+        if (unsubTrans) unsubTrans();
+        if (unsubExp) unsubExp();
+        auth.signOut();
+    };
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    // ==================== AUTH ====================
     document.getElementById('tabLogin').addEventListener('click', () => {
         document.getElementById('tabLogin').classList.add('border-b-2', 'border-navy-800');
         document.getElementById('tabRegister').classList.remove('border-b-2', 'border-navy-800');
@@ -1352,23 +1655,30 @@
     });
 
     document.getElementById('loginBtn').addEventListener('click', async () => {
-        const email = document.getElementById('loginEmail').value;
+        const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
+        if (!email || !password) return alert('Email dan password harus diisi');
         try {
+            showLoading();
             await auth.signInWithEmailAndPassword(email, password);
         } catch (e) {
             alert('Login gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
     });
 
     document.getElementById('registerBtn').addEventListener('click', async () => {
-        const name = document.getElementById('regName').value;
-        const email = document.getElementById('regEmail').value;
-        const phone = document.getElementById('regPhone').value;
+        const name = document.getElementById('regName').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
         const password = document.getElementById('regPassword').value;
-        const confirm = document.getElementById('regConfirmPassword').value;
+        const confirm = document.getElementById('regConfirm').value;
+        if (!name || !email || !phone || !password || !confirm) return alert('Semua field harus diisi');
+        if (password.length < 6) return alert('Password minimal 6 karakter');
         if (password !== confirm) return alert('Password tidak cocok');
         try {
+            showLoading();
             const cred = await auth.createUserWithEmailAndPassword(email, password);
             const user = cred.user;
             await db.collection('Master_Owners').doc(user.uid).set({
@@ -1379,16 +1689,27 @@
                 status: 'pending',
                 registeredAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            alert('Registrasi berhasil, menunggu aktivasi developer');
+            alert('Registrasi berhasil! Menunggu aktivasi developer.');
+            // Reset form dan pindah ke login
+            document.getElementById('regName').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPhone').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirm').value = '';
+            document.getElementById('tabLogin').click();
         } catch (e) {
             alert('Registrasi gagal: ' + e.message);
+        } finally {
+            hideLoading();
         }
     });
 
-    function resetPassword() {
+    window.resetPassword = function() {
         const email = prompt('Masukkan email Anda');
-        if (email) auth.sendPasswordResetEmail(email).then(() => alert('Email reset telah dikirim'));
-    }
+        if (email) {
+            auth.sendPasswordResetEmail(email).then(() => alert('Email reset telah dikirim'));
+        }
+    };
 </script>
 </body>
 </html>
