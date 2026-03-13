@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#bf2c97">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>HeiKasir - Kasir Pro</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Custom scrollbar untuk kasir */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Toast styling (akan diatur lebih lanjut di utils) */
+        .toast {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            min-width: 280px;
+            max-width: 380px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            padding: 1rem 1.25rem;
+            border-left: 4px solid transparent;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            transform: translateX(120%);
+            transition: transform 0.3s, opacity 0.2s;
+            opacity: 0;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .toast.show {
+            display: flex;
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .toast.success { border-left-color: #10b981; }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.warning { border-left-color: #f59e0b; }
+        .toast.info { border-left-color: #3b82f6; }
+        .dark .toast {
+            background: rgba(30,41,59,0.95);
+            color: #e2e8f0;
+            border-color: rgba(255,255,255,0.05);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(191,44,151,0.2);
+            border-top: 4px solid #bf2c97;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Skeleton loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton 1.5s infinite;
+        }
+        @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .dark .skeleton {
+            background: linear-gradient(90deg, #2d3748 25%, #4a5568 50%, #2d3748 75%);
+            background-size: 200% 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans antialiased">
+
+    <!-- ========== MODAL LOGIN OWNER ========== -->
+    <div id="ownerLoginModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-sm w-full p-8 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-tie text-4xl text-purple-600"></i>
+                </div>
+                <h2 class="text-2xl font-black dark:text-white">Login Owner</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Masuk dengan akun owner</p>
+            </div>
+            <div class="space-y-4">
+                <input type="email" id="ownerEmail" placeholder="Email" class="w-full p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-4 focus:ring-purple-500/20 outline-none">
+                <input type="password" id="ownerPassword" placeholder="Password" class="w-full p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-4 focus:ring-purple-500/20 outline-none">
+                <button id="ownerLoginBtn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-all">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login Owner
+                </button>
+            </div>
+            <p id="ownerLoginError" class="text-red-500 text-xs text-center mt-3 hidden"></p>
+        </div>
+    </div>
+
+    <!-- ========== MODAL PIN KASIR ========== -->
+    <div id="pinModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-sm w-full p-8 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-lock text-4xl text-purple-600"></i>
+                </div>
+                <h2 class="text-2xl font-black dark:text-white">Masuk Kasir</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Masukkan username & PIN</p>
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="pinUsername" placeholder="Username" class="w-full p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-4 focus:ring-purple-500/20 outline-none">
+                <input type="password" id="pinCode" maxlength="6" placeholder="PIN (4-6 digit)" class="w-full text-center text-2xl tracking-[0.5em] font-bold p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-4 focus:ring-purple-500/20 outline-none">
+                <button id="pinLoginBtn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-all">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Masuk
+                </button>
+            </div>
+            <p id="pinError" class="text-red-500 text-xs text-center mt-3 hidden"></p>
+        </div>
+    </div>
+
+    <!-- ========== LOCK SCREEN (lisensi tidak aktif) ========== -->
+    <div id="lockOverlay" class="fixed inset-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md z-[60] flex flex-col items-center justify-center hidden">
+        <div class="relative mb-6">
+            <div class="absolute -inset-4 bg-purple-500/20 rounded-full blur-xl animate-pulse"></div>
+            <i class="fas fa-lock text-7xl text-purple-600 relative z-10 animate-bounce-slow"></i>
+        </div>
+        <h2 class="text-3xl font-bold mb-2 text-gray-900 dark:text-white tracking-tight">Akses Terkunci</h2>
+        <p id="lockMessage" class="text-gray-500 dark:text-gray-400 mb-8 text-center px-6 max-w-md leading-relaxed">Lisensi owner tidak aktif.</p>
+        <button onclick="window.location.reload()" class="bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold">Refresh</button>
+    </div>
+
+    <!-- ========== LOADING OVERLAY ========== -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/60 dark:bg-gray-900/60 z-[70] flex flex-col items-center justify-center hidden backdrop-blur-md">
+        <div class="spinner"></div>
+        <p class="mt-4 text-sm font-bold text-purple-700 dark:text-purple-400 animate-pulse">MEMUAT...</p>
+    </div>
+
+    <!-- ========== TOAST NOTIFICATION ========== -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ========== APLIKASI UTAMA (hidden sampai login kasir sukses) ========== -->
+    <div id="app" class="hidden flex flex-col min-h-screen">
+        <!-- HEADER -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-4 py-2 sticky top-0 z-20">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center text-white shadow-md">
+                        <i class="fas fa-cash-register"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg">HeiKasir</h1>
+                        <p id="outletName" class="text-xs text-gray-500 dark:text-gray-400">-</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <!-- Status Printer & Bluetooth -->
+                    <div class="flex items-center gap-2 text-sm">
+                        <i id="printerIcon" class="fas fa-print text-gray-400" title="Printer tidak terhubung"></i>
+                        <span id="printerStatus" class="text-xs hidden sm:inline">Putus</span>
+                        <button id="bluetoothBtn" class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <i class="fas fa-bluetooth"></i>
+                            <span class="hidden sm:inline">Sambungkan</span>
+                        </button>
+                    </div>
+                    <!-- Info Kasir & Logout -->
+                    <div class="flex items-center gap-2 border-l pl-3 border-gray-200 dark:border-gray-700">
+                        <div class="text-right">
+                            <p id="cashierName" class="font-bold text-sm">-</p>
+                            <p id="shiftInfo" class="text-[10px] text-gray-500">-</p>
+                        </div>
+                        <button id="logoutBtn" class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center">
+                            <i class="fas fa-sign-out-alt text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- KONTEN DINAMIS -->
+        <main id="pageContent" class="flex-1 p-4 pb-24 overflow-y-auto"></main>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-2 py-1 flex justify-around items-center z-20">
+            <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="transaksi">
+                <i class="fas fa-shopping-cart text-xl mb-1"></i>
+                <span>Transaksi</span>
+            </button>
+            <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="riwayat">
+                <i class="fas fa-history text-xl mb-1"></i>
+                <span>Riwayat</span>
+            </button>
+            <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="stok">
+                <i class="fas fa-boxes text-xl mb-1"></i>
+                <span>Stok</span>
+            </button>
+            <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="laporan">
+                <i class="fas fa-chart-bar text-xl mb-1"></i>
+                <span>Laporan</span>
+            </button>
+            <button class="nav-item flex flex-col items-center p-2 text-xs" data-page="setting">
+                <i class="fas fa-cog text-xl mb-1"></i>
+                <span>Setting</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- ========== MODAL KASIR (Buka/Tutup Shift) ========== -->
+    <div id="cashierModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6">
+            <h3 class="text-xl font-black mb-4">Buka / Tutup Kasir</h3>
+            <div class="space-y-3">
+                <input type="text" id="modalKasirNominal" placeholder="Modal awal (Rp)" class="w-full p-3 rounded-xl border dark:bg-gray-700" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                <input type="password" id="modalKasirPin" placeholder="PIN Owner / Head" class="w-full p-3 rounded-xl border dark:bg-gray-700">
+                <div class="flex gap-2">
+                    <button id="modalKasirBuka" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold">Buka Kasir</button>
+                    <button id="modalKasirTutup" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold">Tutup Kasir</button>
+                </div>
+                <button onclick="window.closeCashierModal?.()" class="w-full text-gray-500 py-2">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL VOID ========== -->
+    <div id="voidModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6">
+            <h3 class="text-xl font-black mb-4">Void Transaksi</h3>
+            <p class="text-sm mb-3">Masukkan PIN Owner / Head untuk membatalkan transaksi</p>
+            <input type="password" id="voidPin" placeholder="PIN" class="w-full p-3 rounded-xl border dark:bg-gray-700 mb-4">
+            <input type="hidden" id="voidTransactionId">
+            <button id="confirmVoidBtn" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">Konfirmasi Void</button>
+            <button onclick="window.closeVoidModal?.()" class="w-full text-gray-500 py-2 mt-2">Batal</button>
+        </div>
+    </div>
+
+    <!-- ========== MODAL INPUT MANUAL ========== -->
+    <div id="manualModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6">
+            <h3 class="text-xl font-black mb-4">Input Manual</h3>
+            <div class="space-y-3">
+                <input type="text" id="manualName" placeholder="Nama Item" class="w-full p-3 rounded-xl border dark:bg-gray-700">
+                <input type="text" id="manualPrice" placeholder="Harga (Rp)" class="w-full p-3 rounded-xl border dark:bg-gray-700" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                <input type="number" id="manualQty" placeholder="Jumlah" value="1" min="1" class="w-full p-3 rounded-xl border dark:bg-gray-700">
+                <button id="addManualBtn" class="w-full bg-purple-600 text-white py-3 rounded-xl font-bold">Tambah ke Keranjang</button>
+                <button onclick="window.closeManualModal?.()" class="w-full text-gray-500 py-2">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL PEMBAYARAN ========== -->
+    <div id="paymentModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-black mb-4">Pembayaran</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs font-bold text-gray-500">Nama Customer</label>
+                    <input type="text" id="paymentCustomer" value="Reg" class="w-full p-3 rounded-xl border dark:bg-gray-700">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500">Metode Pembayaran</label>
+                    <select id="paymentMethod" class="w-full p-3 rounded-xl border dark:bg-gray-700">
+                        <!-- akan diisi oleh js -->
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500">Diskon</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="paymentDiscountNominal" placeholder="Rp" class="flex-1 p-3 rounded-xl border dark:bg-gray-700" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        <input type="text" id="paymentDiscountPercent" placeholder="%" class="flex-1 p-3 rounded-xl border dark:bg-gray-700" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
+                </div>
+                <div class="border-t pt-2">
+                    <div class="flex justify-between text-sm">
+                        <span>Subtotal</span>
+                        <span id="paymentSubtotal">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Diskon</span>
+                        <span id="paymentDiscountDisplay">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Pajak</span>
+                        <span id="paymentTax">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between font-bold text-lg mt-1">
+                        <span>Total</span>
+                        <span id="paymentTotal">Rp 0</span>
+                    </div>
+                </div>
+                <div id="paymentCashSection" class="hidden">
+                    <label class="text-xs font-bold text-gray-500">Uang Tunai</label>
+                    <div class="flex flex-wrap gap-2 mb-2">
+                        <button class="cash-amount bg-gray-200 px-3 py-2 rounded-lg text-sm" data-amount="5000">Rp5.000</button>
+                        <button class="cash-amount bg-gray-200 px-3 py-2 rounded-lg text-sm" data-amount="10000">Rp10.000</button>
+                        <button class="cash-amount bg-gray-200 px-3 py-2 rounded-lg text-sm" data-amount="20000">Rp20.000</button>
+                        <button class="cash-amount bg-gray-200 px-3 py-2 rounded-lg text-sm" data-amount="50000">Rp50.000</button>
+                        <button class="cash-amount bg-gray-200 px-3 py-2 rounded-lg text-sm" data-amount="100000">Rp100.000</button>
+                    </div>
+                    <input type="text" id="paymentCashInput" placeholder="Jumlah dibayar" class="w-full p-3 rounded-xl border dark:bg-gray-700" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    <div class="flex justify-between text-sm mt-1">
+                        <span>Kembali</span>
+                        <span id="paymentChange">Rp 0</span>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button id="paymentConfirmBtn" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold">Bayar</button>
+                    <button onclick="window.closePaymentModal?.()" class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-bold">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL UPLOAD FOTO MENU ========== -->
+    <div id="uploadMenuPhotoModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6">
+            <h3 class="text-xl font-black mb-4">Upload Foto Menu</h3>
+            <input type="file" id="menuPhotoInput" accept="image/*" capture="environment" class="mb-3">
+            <img id="menuPhotoPreview" class="w-full rounded-xl mb-3 hidden">
+            <button id="uploadMenuPhotoSave" class="w-full bg-purple-600 text-white py-3 rounded-xl font-bold">Simpan</button>
+            <button onclick="window.closeUploadMenuModal?.()" class="w-full text-gray-500 py-2 mt-2">Batal</button>
+        </div>
+    </div>
+
+    <!-- ========== MODAL PREVIEW NOTA ========== -->
+    <div id="previewNotaModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6">
+            <h3 class="text-xl font-black mb-4">Preview Nota</h3>
+            <div id="notaPreviewContent" class="bg-white text-black p-4 rounded-lg font-mono text-sm">
+                <!-- akan diisi oleh js -->
+            </div>
+            <button onclick="window.closePreviewModal?.()" class="w-full bg-purple-600 text-white py-3 rounded-xl font-bold mt-3">Tutup</button>
+        </div>
+    </div>
+
+    <!-- ========== SCRIPT FILES (URUTAN BERDASARKAN DEPENDENSI) ========== -->
+
+<!-- 1. Konfigurasi Firebase (paling awal) -->
+<script src="config.js"></script>
+
+<!-- 2. State & Utilitas (dibutuhkan semua file) -->
+<script src="state.js"></script>
+<script src="utils.js"></script>
+
+<!-- 3. Sistem Offline (membutuhkan state & utils) -->
+<script src="offline-core.js"></script>
+<script src="offline-queue.js"></script>
+<script src="offline-sync.js"></script>
+<script src="offline-ui.js"></script>
+
+<!-- 4. Bluetooth (membutuhkan utils) -->
+<script src="bluetooth.js"></script>
+
+<!-- 5. Autentikasi (membutuhkan auth, db, state, utils) -->
+<script src="auth-owner.js"></script>
+<script src="auth-head.js"></script>
+<script src="auth-pin.js"></script>
+<script src="auth-logout.js"></script>
+
+<!-- 6. Kamera & Foto (membutuhkan utils & offline) -->
+<script src="camera.js"></script>
+<script src="photo-storage.js"></script>
+
+<!-- 7. Absensi & Shift (membutuhkan state, utils, auth, offline) -->
+<script src="attendance.js"></script>
+<script src="shift.js"></script>
+
+<!-- 8. Database Helpers (membutuhkan state & db) -->
+<script src="db-helpers.js"></script>
+
+<!-- 9. Navigasi (membutuhkan state, utils, dan halaman akan didefinisikan setelah ini) -->
+<script src="nav.js"></script>
+
+<!-- 10. Halaman Transaksi (membutuhkan dbHelpers, state, utils, offline, bluetooth, print) -->
+<script src="transaksi-render.js"></script>
+<script src="transaksi-cart.js"></script>
+<script src="transaksi-payment.js"></script>
+<script src="transaksi-manual.js"></script>
+<script src="menu-photo.js"></script>
+
+<!-- 11. Halaman Riwayat & Laporan (membutuhkan dbHelpers, state, utils, offline, auth-head) -->
+<script src="riwayat-render.js"></script>
+<script src="laporan-render.js"></script>
+<script src="expense-input.js"></script>
+<script src="riwayat-download.js"></script>
+<script src="riwayat-print.js"></script>
+<script src="void-transaksi.js"></script>
+
+<!-- 12. Halaman Stok (membutuhkan dbHelpers) -->
+<script src="stok-render.js"></script>
+<script src="stok-alert.js"></script>
+
+<!-- 13. Halaman Setting (membutuhkan dbHelpers, auth-head) -->
+<script src="setting-render.js"></script>
+<script src="setting-nota.js"></script>
+<script src="setting-printer.js"></script>
+
+<!-- 14. Cetak Struk (membutuhkan utils) -->
+<script src="print-receipt.js"></script>
+
+<!-- 15. Inisialisasi (paling akhir) -->
+<script src="init.js"></script>
+
+<!-- Fungsi global untuk menutup modal (dapat dipanggil dari HTML) -->
+<script>
+    window.closeManualModal = function() {
+        document.getElementById('manualModal')?.classList.add('hidden');
+    };
+    window.closeCashierModal = function() {
+        document.getElementById('cashierModal')?.classList.add('hidden');
+    };
+    window.closeVoidModal = function() {
+        document.getElementById('voidModal')?.classList.add('hidden');
+    };
+    window.closePaymentModal = function() {
+        document.getElementById('paymentModal')?.classList.add('hidden');
+    };
+    window.closeUploadMenuModal = function() {
+        document.getElementById('uploadMenuPhotoModal')?.classList.add('hidden');
+    };
+    window.closePreviewModal = function() {
+        document.getElementById('previewNotaModal')?.classList.add('hidden');
+    };
+</script>
+</body>
+</html>
